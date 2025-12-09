@@ -2,7 +2,7 @@
 
 AI-powered GitHub submission reviews for Superteam Earn bounties. Get instant scores (0-100) and actionable feedback on pull requests and repositories using Claude Sonnet 3.5.
 
-**Live Demo**: https://earn-auto-review.rectorspace.com *(coming soon)*
+**Live Demo**: https://earn-auto-review.rectorspace.com
 
 **Bounty**: https://earn.superteam.fun/listing/add-github-links-to-earn-auto-reviews
 
@@ -319,7 +319,7 @@ See [INTEGRATION.md](./INTEGRATION.md) for production integration with Superteam
 
 ## 🔗 Links
 
-- **Live Demo**: https://earn-auto-review.rectorspace.com *(coming soon)*
+- **Live Demo**: https://earn-auto-review.rectorspace.com
 - **Bounty Listing**: https://earn.superteam.fun/listing/add-github-links-to-earn-auto-reviews
 - **GitHub Repository**: https://github.com/RECTOR-LABS/earn-auto-reviewer
 - **OpenRouter**: https://openrouter.ai

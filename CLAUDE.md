@@ -290,12 +290,16 @@ npm run lint
   - Production INTEGRATION.md guide
   - Screenshots placeholders ready
 
-### ⏳ Phase 4: The Extras
-- [ ] Find issue in superteamdao/earn repo
-- [ ] Submit contribution PR
-- [ ] Analyze 5-10 real submissions
-- [ ] Record demo video (2-3 min)
-- [ ] Write proposal document
+### 🚧 Phase 4: Finalize Submission (Path B - Standalone Demo)
+- [x] Write proposal document - PROPOSAL.md created ✅
+- [x] Create demo video script - DEMO-SCRIPT.md created ✅
+- [ ] Add OpenRouter credits (blocked by user)
+- [ ] Test with 3-5 real examples - Issue #4 (needs credits)
+- [ ] Record demo video (2-3 min) - Issue #8 (needs credits for live demo)
+- [ ] Upload video and get shareable link
+- [ ] Update PROPOSAL.md with video link
+- [ ] Submit to Superteam Earn before Dec 19, 2025
+- [x] Close Issue #7 (contribute to their repo) - Not needed for path B ✅
 
 ---
 
@@ -443,7 +447,11 @@ Pre-loaded examples from Superteam Earn:
 
 ---
 
-**Last Updated**: 2025-12-09 (Issue #5 COMPLETE! Live at earn-auto-review.rectorspace.com)
-**Next Review**: After Issue #4 completion (Testing with real submissions)
+**Last Updated**: 2025-12-09 (Proposal & Demo Script Ready! Path B confirmed)
+**Next Steps**:
+1. Add OpenRouter credits ($5-10)
+2. Test with real examples
+3. Record demo video
+4. Submit before Dec 19, 2025
 
 Bismillah! May Allah grant success in this opportunity. InshaAllah!

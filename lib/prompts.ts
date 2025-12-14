@@ -120,13 +120,50 @@ RESPOND WITH THIS EXACT JSON STRUCTURE:
         }
       ]
     }
-  ]
+  ],
+  "fullReport": {
+    "detailedAnalysis": [
+      {
+        "judgeId": "<judge-id>",
+        "judgeName": "<Judge Name>",
+        "analysis": "<2-4 paragraph in-depth analysis from this judge's perspective>"
+      }
+    ],
+    "fileBreakdown": [
+      {
+        "file": "<file path, e.g. src/auth.ts>",
+        "score": <0-100>,
+        "status": "<good|warning|critical>",
+        "issues": <number of issues found>
+      }
+    ],
+    "recommendations": [
+      {
+        "priority": "<high|medium|low>",
+        "title": "<actionable title>",
+        "description": "<specific steps to implement>",
+        "effort": "<quick|moderate|significant>"
+      }
+    ],
+    "codeSnippets": [
+      {
+        "file": "<file path>",
+        "issue": "<what's wrong>",
+        "before": "<current code snippet>",
+        "after": "<suggested improved code>",
+        "language": "<js|ts|py|etc>"
+      }
+    ]
+  }
 }
 
 IMPORTANT:
-- Include ALL ${judges.length} judges in the response
+- Include ALL ${judges.length} judges in the response AND in detailedAnalysis
 - Each judge must have 2-5 findings
-- Be specific and actionable in findings
+- Include 3-8 files in fileBreakdown (most important files)
+- Include 3-6 prioritized recommendations
+- Include 1-3 code snippets with before/after examples
+- Be specific and actionable throughout
 - Output ONLY the JSON object`;
 }
 

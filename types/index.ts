@@ -76,6 +76,49 @@ export interface Finding {
   location?: string; // e.g., "src/auth.ts:45"
 }
 
+// ============================================
+// Full Report Types (Detailed Analysis)
+// ============================================
+
+export interface DetailedAnalysis {
+  judgeId: JudgeId;
+  judgeName: string;
+  analysis: string; // Full paragraph analysis
+}
+
+export type FileStatus = 'good' | 'warning' | 'critical';
+export type Priority = 'high' | 'medium' | 'low';
+export type Effort = 'quick' | 'moderate' | 'significant';
+
+export interface FileBreakdown {
+  file: string;
+  score: number; // 0-100
+  status: FileStatus;
+  issues: number;
+}
+
+export interface Recommendation {
+  priority: Priority;
+  title: string;
+  description: string;
+  effort: Effort;
+}
+
+export interface CodeSnippet {
+  file: string;
+  issue: string;
+  before: string;
+  after: string;
+  language: string;
+}
+
+export interface FullReport {
+  detailedAnalysis: DetailedAnalysis[];
+  fileBreakdown: FileBreakdown[];
+  recommendations: Recommendation[];
+  codeSnippets: CodeSnippet[];
+}
+
 export interface JudgeReview {
   id: JudgeId;
   name: string;
@@ -99,6 +142,7 @@ export interface OverallScore {
 export interface ReviewResult {
   overall: OverallScore;
   judges: JudgeReview[];
+  fullReport: FullReport;
   metadata: {
     reviewedAt: string;
     url: string;

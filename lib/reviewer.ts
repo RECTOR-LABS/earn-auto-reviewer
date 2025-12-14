@@ -15,6 +15,7 @@ import {
   JudgeReview,
   Finding,
   OverallScore,
+  FullReport,
   JUDGES,
   ModelId,
   DEFAULT_MODEL,
@@ -54,9 +55,46 @@ const overallScoreSchema = z.object({
   summary: z.string(),
 });
 
+// Full Report Schemas
+const detailedAnalysisSchema = z.object({
+  judgeId: z.string(),
+  judgeName: z.string(),
+  analysis: z.string(),
+});
+
+const fileBreakdownSchema = z.object({
+  file: z.string(),
+  score: z.number().min(0).max(100),
+  status: z.enum(['good', 'warning', 'critical']),
+  issues: z.number().min(0),
+});
+
+const recommendationSchema = z.object({
+  priority: z.enum(['high', 'medium', 'low']),
+  title: z.string(),
+  description: z.string(),
+  effort: z.enum(['quick', 'moderate', 'significant']),
+});
+
+const codeSnippetSchema = z.object({
+  file: z.string(),
+  issue: z.string(),
+  before: z.string(),
+  after: z.string(),
+  language: z.string(),
+});
+
+const fullReportSchema = z.object({
+  detailedAnalysis: z.array(detailedAnalysisSchema).min(1),
+  fileBreakdown: z.array(fileBreakdownSchema).min(1),
+  recommendations: z.array(recommendationSchema).min(1),
+  codeSnippets: z.array(codeSnippetSchema).min(0), // Optional, may be empty
+});
+
 const multiJudgeReviewSchema = z.object({
   overall: overallScoreSchema,
   judges: z.array(judgeReviewSchema).min(1),
+  fullReport: fullReportSchema,
 });
 
 // ============================================
@@ -112,7 +150,7 @@ function calculateGrade(score: number): string {
 function parseMultiJudgeResponse(
   text: string,
   expectedJudges: JudgeId[]
-): { overall: OverallScore; judges: JudgeReview[] } {
+): { overall: OverallScore; judges: JudgeReview[]; fullReport: FullReport } {
   const extracted = extractJSON(text);
 
   try {
@@ -157,6 +195,7 @@ function parseMultiJudgeResponse(
     return {
       overall: validated.overall as OverallScore,
       judges: validated.judges as JudgeReview[],
+      fullReport: validated.fullReport as FullReport,
     };
   } catch (error) {
     console.error('[Reviewer] Parse error:', error);
@@ -203,13 +242,14 @@ export async function generateMultiJudgeReview(params: {
 
     console.log(`[Reviewer] Received response (${result.text.length} chars)`);
 
-    const { overall, judges: judgeReviews } = parseMultiJudgeResponse(result.text, judges);
+    const { overall, judges: judgeReviews, fullReport } = parseMultiJudgeResponse(result.text, judges);
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(1);
 
     return {
       overall,
       judges: judgeReviews,
+      fullReport,
       metadata: {
         reviewedAt: new Date().toISOString(),
         url,

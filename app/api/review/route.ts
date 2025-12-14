@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { parseGitHubUrl } from '@/lib/github';
 import { getReview } from '@/lib/review-service';
-import { JudgeId, PANEL_PRESETS, JUDGES } from '@/types';
+import { JudgeId, PANEL_PRESETS, JUDGES, ModelId, MODELS, DEFAULT_MODEL, MODEL_ORDER } from '@/types';
 
 // Valid judge IDs
 const VALID_JUDGES = Object.keys(JUDGES) as JudgeId[];
 
+// Valid model IDs
+const VALID_MODELS = Object.keys(MODELS) as ModelId[];
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { url, judges: requestedJudges, preset } = body;
+    const { url, judges: requestedJudges, preset, model: requestedModel } = body;
 
     // Validate URL
     if (!url || typeof url !== 'string') {
@@ -49,11 +52,18 @@ export async function POST(request: NextRequest) {
       judges = PANEL_PRESETS.comprehensive;
     }
 
+    // Determine which model to use
+    let model: ModelId = DEFAULT_MODEL;
+    if (requestedModel && VALID_MODELS.includes(requestedModel as ModelId)) {
+      model = requestedModel as ModelId;
+    }
+
     console.log(`[API] Review request for ${url}`);
     console.log(`[API] Using ${judges.length} judges: ${judges.join(', ')}`);
+    console.log(`[API] Using model: ${model}`);
 
     try {
-      const result = await getReview(parsed, judges);
+      const result = await getReview(parsed, judges, model);
 
       return NextResponse.json(
         {
@@ -127,7 +137,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET: Return available judges and presets
+// GET: Return available judges, presets, and models
 export async function GET() {
   return NextResponse.json({
     judges: JUDGES,
@@ -148,5 +158,8 @@ export async function GET() {
         judges: PANEL_PRESETS.comprehensive,
       },
     },
+    models: MODELS,
+    modelOrder: MODEL_ORDER,
+    defaultModel: DEFAULT_MODEL,
   });
 }

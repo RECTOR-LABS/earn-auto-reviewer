@@ -104,6 +104,7 @@ export interface ReviewResult {
     url: string;
     type: 'pr' | 'repo';
     judgesUsed: JudgeId[];
+    modelUsed?: ModelId;
     reviewDuration?: string;
   };
 }
@@ -189,6 +190,113 @@ export const JUDGES: Record<JudgeId, JudgeInfo> = {
     focusAreas: ['API Design', 'Error Messages', 'Type Safety', 'SDK Usability', 'Onboarding', 'Debugging Experience'],
   },
 };
+
+// ============================================
+// Model Selection Types
+// ============================================
+
+export type ModelId =
+  | 'anthropic/claude-3.5-haiku'
+  | 'google/gemini-2.5-flash'
+  | 'openai/gpt-4o'
+  | 'anthropic/claude-sonnet-4.5'
+  | 'anthropic/claude-opus-4'
+  | 'google/gemini-2.5-pro';
+
+export type CostTier = '$' | '$$' | '$$$' | '$$$$';
+
+export interface ModelInfo {
+  id: ModelId;
+  name: string;
+  provider: string;
+  description: string;
+  costTier: CostTier;
+  inputCost: string;  // e.g., "$0.80/M"
+  outputCost: string; // e.g., "$4/M"
+  speed: 'Very Fast' | 'Fast' | 'Medium' | 'Slow';
+  contextWindow: string;
+}
+
+export const DEFAULT_MODEL: ModelId = 'anthropic/claude-3.5-haiku';
+
+export const MODELS: Record<ModelId, ModelInfo> = {
+  'anthropic/claude-3.5-haiku': {
+    id: 'anthropic/claude-3.5-haiku',
+    name: 'Claude 3.5 Haiku',
+    provider: 'Anthropic',
+    description: 'Fast & affordable - perfect for most reviews',
+    costTier: '$',
+    inputCost: '$0.80/M',
+    outputCost: '$4/M',
+    speed: 'Fast',
+    contextWindow: '200K',
+  },
+  'google/gemini-2.5-flash': {
+    id: 'google/gemini-2.5-flash',
+    name: 'Gemini 2.5 Flash',
+    provider: 'Google',
+    description: 'Ultra budget with 1M context window',
+    costTier: '$',
+    inputCost: '$0.30/M',
+    outputCost: '$2.50/M',
+    speed: 'Very Fast',
+    contextWindow: '1M',
+  },
+  'openai/gpt-4o': {
+    id: 'openai/gpt-4o',
+    name: 'GPT-4o',
+    provider: 'OpenAI',
+    description: 'OpenAI flagship - reliable alternative',
+    costTier: '$$',
+    inputCost: '$2.50/M',
+    outputCost: '$10/M',
+    speed: 'Fast',
+    contextWindow: '128K',
+  },
+  'anthropic/claude-sonnet-4.5': {
+    id: 'anthropic/claude-sonnet-4.5',
+    name: 'Claude Sonnet 4.5',
+    provider: 'Anthropic',
+    description: 'Balanced quality and cost',
+    costTier: '$$',
+    inputCost: '$3/M',
+    outputCost: '$15/M',
+    speed: 'Medium',
+    contextWindow: '200K',
+  },
+  'anthropic/claude-opus-4': {
+    id: 'anthropic/claude-opus-4',
+    name: 'Claude Opus 4',
+    provider: 'Anthropic',
+    description: 'Most capable - deep analysis',
+    costTier: '$$$$',
+    inputCost: '$15/M',
+    outputCost: '$75/M',
+    speed: 'Slow',
+    contextWindow: '200K',
+  },
+  'google/gemini-2.5-pro': {
+    id: 'google/gemini-2.5-pro',
+    name: 'Gemini 2.5 Pro',
+    provider: 'Google',
+    description: 'Google flagship with 1M context',
+    costTier: '$',
+    inputCost: '$0.30/M',
+    outputCost: '$2.50/M',
+    speed: 'Medium',
+    contextWindow: '1M',
+  },
+};
+
+// Model list ordered by cost (for UI dropdown)
+export const MODEL_ORDER: ModelId[] = [
+  'anthropic/claude-3.5-haiku',
+  'google/gemini-2.5-flash',
+  'openai/gpt-4o',
+  'anthropic/claude-sonnet-4.5',
+  'google/gemini-2.5-pro',
+  'anthropic/claude-opus-4',
+];
 
 // ============================================
 // Legacy Types (Backward Compatibility)

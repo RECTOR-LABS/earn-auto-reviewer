@@ -16,6 +16,8 @@ import {
   Finding,
   OverallScore,
   JUDGES,
+  ModelId,
+  DEFAULT_MODEL,
 } from '@/types';
 
 // Initialize OpenRouter client
@@ -178,8 +180,9 @@ export async function generateMultiJudgeReview(params: {
   metadata: Record<string, any>;
   url: string;
   judges: JudgeId[];
+  model?: ModelId;
 }): Promise<ReviewResult> {
-  const { type, content, metadata, url, judges } = params;
+  const { type, content, metadata, url, judges, model = DEFAULT_MODEL } = params;
 
   if (!process.env.OPENROUTER_API_KEY) {
     throw new Error('OPENROUTER_API_KEY is not configured');
@@ -190,9 +193,10 @@ export async function generateMultiJudgeReview(params: {
   try {
     console.log(`[Reviewer] Starting multi-judge review with ${judges.length} judges`);
     console.log(`[Reviewer] Judges: ${judges.join(', ')}`);
+    console.log(`[Reviewer] Model: ${model}`);
 
     const result = await generateText({
-      model: openrouter('anthropic/claude-3.5-sonnet'),
+      model: openrouter(model),
       system: MULTI_JUDGE_SYSTEM_PROMPT,
       prompt: createMultiJudgePrompt({ type, content, metadata, judges }),
     });
@@ -211,6 +215,7 @@ export async function generateMultiJudgeReview(params: {
         url,
         type,
         judgesUsed: judges,
+        modelUsed: model,
         reviewDuration: `${duration}s`,
       },
     };

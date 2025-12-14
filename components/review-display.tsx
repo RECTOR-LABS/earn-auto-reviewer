@@ -278,6 +278,7 @@ export function ReviewDisplay({ review }: ReviewDisplayProps) {
       <div className="text-xs text-muted-foreground text-center space-y-1">
         <p>
           Reviewed by {metadata.judgesUsed.length} expert judges
+          {metadata.modelUsed && ` using ${metadata.modelUsed.split('/')[1]}`}
           {metadata.reviewDuration && ` in ${metadata.reviewDuration}`}
         </p>
         <p>

@@ -13,6 +13,10 @@ import {
   ReviewPanelPreset,
   PANEL_PRESETS,
   JUDGES,
+  ModelId,
+  MODELS,
+  MODEL_ORDER,
+  DEFAULT_MODEL,
 } from '@/types';
 
 // Pre-loaded examples from Superteam Earn submissions
@@ -81,6 +85,9 @@ export default function Home() {
   const [selectedPreset, setSelectedPreset] = useState<ReviewPanelPreset>('comprehensive');
   const [customJudges, setCustomJudges] = useState<Set<JudgeId>>(new Set(ALL_JUDGES));
 
+  // Model selection state
+  const [selectedModel, setSelectedModel] = useState<ModelId>(DEFAULT_MODEL);
+
   // Get effective judges based on selection
   const getSelectedJudges = (): JudgeId[] => {
     if (selectedPreset === 'custom') {
@@ -112,6 +119,7 @@ export default function Home() {
           url,
           preset: selectedPreset !== 'custom' ? selectedPreset : undefined,
           judges: selectedPreset === 'custom' ? judges : undefined,
+          model: selectedModel,
         }),
       });
 
@@ -309,6 +317,62 @@ export default function Home() {
                   )}
                 </div>
 
+                {/* Model Selection */}
+                <div className="space-y-4 pt-4 border-t">
+                  <div className="space-y-2">
+                    <h3 className="font-medium">Select AI Model</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Choose the AI model for review analysis
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                    {MODEL_ORDER.map((modelId) => {
+                      const model = MODELS[modelId];
+                      const isSelected = selectedModel === modelId;
+                      return (
+                        <button
+                          key={modelId}
+                          onClick={() => setSelectedModel(modelId)}
+                          className={`p-3 rounded-lg border text-left transition-colors ${
+                            isSelected
+                              ? 'border-primary bg-primary/5 ring-1 ring-primary'
+                              : 'border-muted hover:border-primary/50'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium text-sm">{model.name}</span>
+                            <span className={`text-xs font-mono ${
+                              model.costTier === '$' ? 'text-green-600' :
+                              model.costTier === '$$' ? 'text-yellow-600' :
+                              model.costTier === '$$$' ? 'text-orange-600' :
+                              'text-red-600'
+                            }`}>
+                              {model.costTier}
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {model.description}
+                          </p>
+                          <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+                            <span>{model.speed}</span>
+                            <span>•</span>
+                            <span>{model.contextWindow} ctx</span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Cost Legend */}
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                    <span className="font-medium">Cost:</span>
+                    <span><span className="text-green-600 font-mono">$</span> Budget</span>
+                    <span><span className="text-yellow-600 font-mono">$$</span> Standard</span>
+                    <span><span className="text-red-600 font-mono">$$$$</span> Premium</span>
+                  </div>
+                </div>
+
                 {/* Pre-loaded Examples */}
                 <div className="space-y-3 pt-4 border-t">
                   <p className="text-sm font-medium text-muted-foreground">
@@ -434,7 +498,7 @@ export default function Home() {
                   Next.js 14
                 </span>
                 <span className="px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded">
-                  Claude Sonnet 3.5
+                  OpenRouter
                 </span>
                 <span className="px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded">
                   Octokit

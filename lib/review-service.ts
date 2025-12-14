@@ -1,7 +1,7 @@
 // Review service - orchestrates caching, GitHub fetching, and AI review
 // Multi-Judge Panel System
 
-import { ReviewResult, JudgeId, ParsedGitHubUrl, PANEL_PRESETS } from '@/types';
+import { ReviewResult, JudgeId, ParsedGitHubUrl, PANEL_PRESETS, ModelId, DEFAULT_MODEL } from '@/types';
 import {
   fetchPullRequest,
   fetchRepository,
@@ -135,7 +135,8 @@ function getJudgesCacheKey(judges: JudgeId[]): string {
  */
 export async function getReview(
   parsed: ParsedGitHubUrl,
-  judges: JudgeId[] = PANEL_PRESETS.comprehensive
+  judges: JudgeId[] = PANEL_PRESETS.comprehensive,
+  model: ModelId = DEFAULT_MODEL
 ): Promise<ReviewServiceResult> {
   const url = parsed.url;
   const judgeKey = getJudgesCacheKey(judges);
@@ -172,7 +173,7 @@ export async function getReview(
   }
 
   // Step 3: Fetch content and generate new review
-  console.log(`[ReviewService] Generating new review with ${judges.length} judges`);
+  console.log(`[ReviewService] Generating new review with ${judges.length} judges using ${model}`);
   const { type, content, metadata } = await fetchReviewContent(parsed);
 
   const review = await generateMultiJudgeReview({
@@ -181,6 +182,7 @@ export async function getReview(
     metadata,
     url,
     judges,
+    model,
   });
 
   // Step 4: Store in cache

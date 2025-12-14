@@ -47,6 +47,7 @@ import {
   FileCode,
   AlertOctagon,
   ChevronUp,
+  Play,
 } from 'lucide-react';
 
 const EXAMPLE_URLS = [
@@ -335,7 +336,24 @@ export default function Home() {
   const [isFocused, setIsFocused] = useState(false);
   const [selectedExample, setSelectedExample] = useState(0);
   const [showFullReport, setShowFullReport] = useState(false);
+  const [activeVideo, setActiveVideo] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Demo videos
+  const DEMO_VIDEOS = [
+    {
+      id: 'video1',
+      title: 'Full Review Demo',
+      description: 'Watch our 8-judge AI system analyze a real GitHub repository',
+      youtubeId: 'h417a4o90Ps',
+    },
+    {
+      id: 'video2',
+      title: 'Full Report Feature',
+      description: 'Deep dive into detailed analysis, file breakdown, and code suggestions',
+      youtubeId: 'lFqoYyjXIks',
+    },
+  ];
 
   const getSelectedJudges = (): JudgeId[] => {
     if (selectedPreset === 'custom') return Array.from(customJudges);
@@ -760,6 +778,59 @@ export default function Home() {
                         "This isn't a proposal. It's a working demo. Try it above. See the results."
                       </p>
                     </div>
+                  </div>
+                </div>
+              </motion.section>
+
+              {/* ═══════════════════════════════════════════════════════════════ */}
+              {/* DEMO VIDEOS SECTION */}
+              {/* ═══════════════════════════════════════════════════════════════ */}
+              <motion.section
+                initial={{ opacity: 0, y: 40 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.45 }}
+                className="pt-12"
+              >
+                <div className="text-center mb-6">
+                  <h3 className="text-2xl font-bold text-superteam-slate-900 mb-2">See It In Action</h3>
+                  <p className="text-superteam-slate-500">Watch our AI review system analyze real GitHub submissions</p>
+                </div>
+
+                <div className="bg-white rounded-2xl border border-superteam-slate-200 shadow-lg overflow-hidden">
+                  {/* Video Tabs */}
+                  <div className="flex border-b border-superteam-slate-200">
+                    {DEMO_VIDEOS.map((video, i) => (
+                      <button
+                        key={video.id}
+                        onClick={() => setActiveVideo(i)}
+                        className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+                          activeVideo === i
+                            ? 'bg-superteam-purple-50 text-superteam-purple border-b-2 border-superteam-purple'
+                            : 'text-superteam-slate-600 hover:bg-superteam-slate-50'
+                        }`}
+                      >
+                        <span className="flex items-center justify-center gap-2">
+                          <Play className="w-4 h-4" />
+                          {video.title}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Video Embed */}
+                  <div className="aspect-video bg-superteam-slate-900">
+                    <iframe
+                      src={`https://www.youtube.com/embed/${DEMO_VIDEOS[activeVideo].youtubeId}`}
+                      title={DEMO_VIDEOS[activeVideo].title}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="w-full h-full"
+                    />
+                  </div>
+
+                  {/* Video Description */}
+                  <div className="p-4 bg-superteam-slate-50 border-t border-superteam-slate-200">
+                    <p className="text-sm text-superteam-slate-600 text-center">{DEMO_VIDEOS[activeVideo].description}</p>
                   </div>
                 </div>
               </motion.section>

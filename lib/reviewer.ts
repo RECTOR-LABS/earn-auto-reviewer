@@ -20,6 +20,7 @@ import {
   ModelId,
   DEFAULT_MODEL,
 } from '@/types';
+import { logger } from './logger';
 
 // Initialize OpenRouter client
 const openrouter = createOpenAI({
@@ -124,7 +125,7 @@ function extractJSON(text: string): string {
     return jsonMatch[0];
   }
 
-  console.error('[Reviewer] Could not extract JSON from response');
+  logger.reviewer.error('Could not extract JSON from response');
   return trimmed;
 }
 
@@ -162,7 +163,7 @@ function parseMultiJudgeResponse(
     const missingJudges = expectedJudges.filter(id => !judgeIds.includes(id));
 
     if (missingJudges.length > 0) {
-      console.warn(`[Reviewer] Missing judges in response: ${missingJudges.join(', ')}`);
+      logger.reviewer.warn('Missing judges in response', { missing: missingJudges });
       // Add placeholder for missing judges
       for (const missingId of missingJudges) {
         const judgeInfo = JUDGES[missingId];
@@ -187,7 +188,7 @@ function parseMultiJudgeResponse(
     );
 
     if (Math.abs(validated.overall.score - avgScore) > 5) {
-      console.log(`[Reviewer] Correcting overall score: ${validated.overall.score} → ${avgScore}`);
+      logger.reviewer.info('Correcting overall score', { original: validated.overall.score, corrected: avgScore });
       validated.overall.score = avgScore;
       validated.overall.grade = calculateGrade(avgScore);
     }
@@ -206,11 +207,13 @@ function parseMultiJudgeResponse(
       fullReport: (validated.fullReport as FullReport) || defaultFullReport,
     };
   } catch (error) {
-    console.error('[Reviewer] Parse error:', error);
-    console.error('[Reviewer] Extracted:', extracted.substring(0, 500));
+    logger.reviewer.error('Parse error', {
+      error: error instanceof Error ? error.message : 'Unknown',
+      extracted: extracted.substring(0, 200),
+    });
 
     if (error instanceof z.ZodError) {
-      console.error('[Reviewer] Zod issues:', JSON.stringify(error.issues, null, 2));
+      logger.reviewer.error('Zod validation failed', { issues: error.issues });
     }
 
     throw new Error('Invalid review response format from AI');
@@ -238,9 +241,11 @@ export async function generateMultiJudgeReview(params: {
   const startTime = Date.now();
 
   try {
-    console.log(`[Reviewer] Starting multi-judge review with ${judges.length} judges`);
-    console.log(`[Reviewer] Judges: ${judges.join(', ')}`);
-    console.log(`[Reviewer] Model: ${model}`);
+    logger.reviewer.info('Starting multi-judge review', {
+      judges: judges.length,
+      judgeList: judges.join(', '),
+      model,
+    });
 
     const result = await generateText({
       model: openrouter(model),
@@ -248,7 +253,7 @@ export async function generateMultiJudgeReview(params: {
       prompt: createMultiJudgePrompt({ type, content, metadata, judges }),
     });
 
-    console.log(`[Reviewer] Received response (${result.text.length} chars)`);
+    logger.reviewer.info('Received response', { chars: result.text.length });
 
     const { overall, judges: judgeReviews, fullReport } = parseMultiJudgeResponse(result.text, judges);
 
@@ -268,7 +273,9 @@ export async function generateMultiJudgeReview(params: {
       },
     };
   } catch (error) {
-    console.error('[Reviewer] Multi-judge review failed:', error);
+    logger.reviewer.error('Multi-judge review failed', {
+      error: error instanceof Error ? error.message : 'Unknown',
+    });
 
     if (error instanceof Error) {
       if (error.message.includes('API key') || error.message.includes('OPENROUTER')) {

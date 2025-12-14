@@ -13,6 +13,7 @@ import {
 } from './github';
 import { generateMultiJudgeReview } from './reviewer';
 import { getCachedReview, setCachedReview, CachedReview } from './cache';
+import { logger } from './logger';
 
 export interface ReviewServiceResult {
   review: ReviewResult;
@@ -142,9 +143,9 @@ export async function getReview(
   const judgeKey = getJudgesCacheKey(judges);
 
   // Step 1: Get current commit hash
-  console.log(`[ReviewService] Fetching commit hash for ${url}`);
+  logger.service.info('Fetching commit hash', { url });
   const currentCommitHash = await getCommitHash(parsed);
-  console.log(`[ReviewService] Current commit: ${currentCommitHash.substring(0, 7)}`);
+  logger.service.info('Current commit', { commit: currentCommitHash.substring(0, 7) });
 
   // Step 2: Check cache (include judges in cache key consideration)
   // For now, we cache based on URL + commit hash only
@@ -157,7 +158,7 @@ export async function getReview(
     const hasAllJudges = judges.every(j => cachedJudges.includes(j));
 
     if (hasAllJudges) {
-      console.log(`[ReviewService] Returning cached review`);
+      logger.service.info('Returning cached review');
       return {
         review: cached.review,
         cached: true,
@@ -168,12 +169,12 @@ export async function getReview(
         },
       };
     } else {
-      console.log(`[ReviewService] Cache exists but missing judges, regenerating`);
+      logger.service.info('Cache exists but missing judges, regenerating');
     }
   }
 
   // Step 3: Fetch content and generate new review
-  console.log(`[ReviewService] Generating new review with ${judges.length} judges using ${model}`);
+  logger.service.info('Generating new review', { judges: judges.length, model });
   const { type, content, metadata } = await fetchReviewContent(parsed);
 
   const review = await generateMultiJudgeReview({

@@ -3,6 +3,7 @@
 // For Production: Replace with Redis/Vercel KV
 
 import { ReviewResult } from '@/types';
+import { logger } from './logger';
 
 export interface CachedReview {
   review: ReviewResult;
@@ -45,27 +46,29 @@ export function getCachedReview(
   const cached = cacheStore[key];
 
   if (!cached) {
-    console.log(`[Cache] MISS - No entry for ${url}`);
+    logger.cache.debug('MISS - No entry', { url });
     return null;
   }
 
   // Check expiration
   if (new Date(cached.expiresAt) < new Date()) {
-    console.log(`[Cache] EXPIRED - Entry for ${url} has expired`);
+    logger.cache.debug('EXPIRED - Entry has expired', { url });
     delete cacheStore[key];
     return null;
   }
 
   // Check commit hash
   if (cached.commitHash !== currentCommitHash) {
-    console.log(`[Cache] STALE - Commit hash changed for ${url}`);
-    console.log(`[Cache]   Cached: ${cached.commitHash.substring(0, 7)}`);
-    console.log(`[Cache]   Current: ${currentCommitHash.substring(0, 7)}`);
+    logger.cache.info('STALE - Commit hash changed', {
+      url,
+      cached: cached.commitHash.substring(0, 7),
+      current: currentCommitHash.substring(0, 7),
+    });
     delete cacheStore[key];
     return null;
   }
 
-  console.log(`[Cache] HIT - Returning cached review for ${url}`);
+  logger.cache.info('HIT - Returning cached review', { url });
   return cached;
 }
 
@@ -88,9 +91,11 @@ export function setCachedReview(
     expiresAt: new Date(now.getTime() + CACHE_TTL_MS).toISOString(),
   };
 
-  console.log(`[Cache] SET - Cached review for ${url}`);
-  console.log(`[Cache]   Commit: ${commitHash.substring(0, 7)}`);
-  console.log(`[Cache]   Judges: ${review.metadata.judgesUsed?.length || 0}`);
+  logger.cache.info('SET - Cached review', {
+    url,
+    commit: commitHash.substring(0, 7),
+    judges: review.metadata.judgesUsed?.length || 0,
+  });
 }
 
 /**
@@ -100,7 +105,7 @@ export function invalidateCache(url: string): boolean {
   const key = getCacheKey(url);
   if (cacheStore[key]) {
     delete cacheStore[key];
-    console.log(`[Cache] INVALIDATED - Removed entry for ${url}`);
+    logger.cache.info('INVALIDATED - Removed entry', { url });
     return true;
   }
   return false;
@@ -123,5 +128,5 @@ export function getCacheStats(): {
  */
 export function clearCache(): void {
   Object.keys(cacheStore).forEach(key => delete cacheStore[key]);
-  console.log('[Cache] CLEARED - All entries removed');
+  logger.cache.info('CLEARED - All entries removed');
 }

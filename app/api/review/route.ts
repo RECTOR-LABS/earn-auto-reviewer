@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { parseGitHubUrl } from '@/lib/github';
 import { getReview } from '@/lib/review-service';
 import { JudgeId, PANEL_PRESETS, JUDGES, ModelId, MODELS, DEFAULT_MODEL, MODEL_ORDER } from '@/types';
+import { logger } from '@/lib/logger';
 
 // Valid judge IDs
 const VALID_JUDGES = Object.keys(JUDGES) as JudgeId[];
@@ -70,9 +71,7 @@ export async function POST(request: NextRequest) {
       model = requestedModel as ModelId;
     }
 
-    console.log(`[API] Review request for ${url}`);
-    console.log(`[API] Using ${judges.length} judges: ${judges.join(', ')}`);
-    console.log(`[API] Using model: ${model}`);
+    logger.api.info('Review request', { url, judges: judges.length, model });
 
     try {
       const result = await getReview(parsed, judges, model);
@@ -141,8 +140,8 @@ export async function POST(request: NextRequest) {
       throw error;
     }
   } catch (error: unknown) {
-    console.error('[API] Review error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Internal error';
+    logger.api.error('Review error', { error: errorMessage });
     return NextResponse.json(
       { error: errorMessage, code: 'INTERNAL_ERROR' },
       { status: 500 }

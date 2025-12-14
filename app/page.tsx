@@ -1,8 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UrlInput } from '@/components/url-input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AnimatedScore, JudgeCardPro } from '@/components/pro';
@@ -20,13 +19,14 @@ import {
 import {
   ArrowRight,
   Check,
+  ChevronDown,
   ChevronRight,
   ExternalLink,
   Github,
-  Search,
   Sparkles,
   Users,
   Zap,
+  Send,
 } from 'lucide-react';
 
 const EXAMPLE_URLS = [
@@ -36,11 +36,11 @@ const EXAMPLE_URLS = [
   { label: 'Anchor', url: 'https://github.com/coral-xyz/anchor' },
 ];
 
-const PRESET_INFO: Record<ReviewPanelPreset, { name: string; desc: string; count: number }> = {
-  quick: { name: 'Quick', desc: 'Essential checks', count: 3 },
-  standard: { name: 'Standard', desc: 'Balanced review', count: 5 },
-  comprehensive: { name: 'Comprehensive', desc: 'Full analysis', count: 8 },
-  custom: { name: 'Custom', desc: 'Your selection', count: 0 },
+const PRESET_INFO: Record<ReviewPanelPreset, { name: string; count: number }> = {
+  quick: { name: 'Quick', count: 3 },
+  standard: { name: 'Standard', count: 5 },
+  comprehensive: { name: 'Full', count: 8 },
+  custom: { name: 'Custom', count: 0 },
 };
 
 const ALL_JUDGES: JudgeId[] = [
@@ -53,16 +53,23 @@ export default function Home() {
   const [review, setReview] = useState<ReviewResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [currentUrl, setCurrentUrl] = useState('');
+  const [inputUrl, setInputUrl] = useState('');
   const [selectedPreset, setSelectedPreset] = useState<ReviewPanelPreset>('comprehensive');
   const [customJudges, setCustomJudges] = useState<Set<JudgeId>>(new Set(ALL_JUDGES));
   const [selectedModel, setSelectedModel] = useState<ModelId>(DEFAULT_MODEL);
+  const [showModelDropdown, setShowModelDropdown] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const getSelectedJudges = (): JudgeId[] => {
     if (selectedPreset === 'custom') return Array.from(customJudges);
     return PANEL_PRESETS[selectedPreset];
   };
 
-  const handleReview = async (url: string) => {
+  const handleReview = async (url?: string) => {
+    const targetUrl = url || inputUrl;
+    if (!targetUrl.trim()) return;
+
     const judges = getSelectedJudges();
     if (judges.length === 0) {
       setError('Please select at least one judge');
@@ -72,14 +79,14 @@ export default function Home() {
     setIsLoading(true);
     setError(null);
     setReview(null);
-    setCurrentUrl(url);
+    setCurrentUrl(targetUrl);
 
     try {
       const response = await fetch('/api/review', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          url,
+          url: targetUrl,
           preset: selectedPreset !== 'custom' ? selectedPreset : undefined,
           judges: selectedPreset === 'custom' ? judges : undefined,
           model: selectedModel,
@@ -100,6 +107,7 @@ export default function Home() {
     setReview(null);
     setError(null);
     setCurrentUrl('');
+    setInputUrl('');
   };
 
   const toggleJudge = (id: JudgeId) => {
@@ -110,14 +118,16 @@ export default function Home() {
     });
   };
 
+  const selectedModelInfo = MODELS[selectedModel];
+
   return (
-    <div className="min-h-screen bg-superteam-slate-50">
+    <div className="min-h-screen bg-gradient-to-b from-white via-superteam-purple-50/30 to-white">
       {/* Header */}
-      <header className="bg-white border-b border-superteam-slate-200 sticky top-0 z-50">
+      <header className="bg-white/80 backdrop-blur-sm border-b border-superteam-slate-200/50 sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 max-w-5xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-superteam-purple flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-superteam-purple to-superteam-purple-dark flex items-center justify-center shadow-lg shadow-superteam-purple/25">
                 <Sparkles className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -138,7 +148,7 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-12 max-w-5xl">
+      <main className="container mx-auto px-4 py-8 max-w-4xl">
         <AnimatePresence mode="wait">
           {!review && !isLoading && (
             <motion.div
@@ -146,257 +156,257 @@ export default function Home() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="space-y-12"
+              className="space-y-8"
             >
-              {/* Hero Section */}
-              <div className="text-center space-y-4 max-w-2xl mx-auto">
+              {/* Hero Section with AI Chat Input */}
+              <div className="pt-8 pb-4">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
+                  className="text-center space-y-4 mb-10"
                 >
-                  <Badge className="bg-superteam-purple-100 text-superteam-purple-700 border-0 mb-4">
-                    <Zap className="w-3 h-3 mr-1" />
-                    AI-Powered Reviews
-                  </Badge>
+                  <h2 className="text-4xl md:text-5xl font-bold text-superteam-slate-900 tracking-tight">
+                    Get expert code reviews
+                    <br />
+                    <span className="bg-gradient-to-r from-superteam-purple to-superteam-purple-dark bg-clip-text text-transparent">
+                      in seconds
+                    </span>
+                  </h2>
+                  <p className="text-superteam-slate-600 text-lg max-w-xl mx-auto">
+                    AI-powered analysis by 8 expert judges
+                  </p>
                 </motion.div>
-                <motion.h2
+
+                {/* AI Chat Style Input */}
+                <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
-                  className="text-4xl font-bold text-superteam-slate-900"
+                  className="max-w-2xl mx-auto"
                 >
-                  Get expert code reviews in seconds
-                </motion.h2>
-                <motion.p
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="text-lg text-superteam-slate-600"
-                >
-                  Our panel of 8 AI judges analyzes your GitHub submissions for security,
-                  performance, architecture, and more.
-                </motion.p>
-              </div>
+                  <div
+                    className={`relative rounded-2xl transition-all duration-300 ${
+                      isFocused
+                        ? 'shadow-[0_0_0_2px_rgba(99,102,241,0.3),0_8px_40px_rgba(99,102,241,0.15)]'
+                        : 'shadow-[0_2px_20px_rgba(0,0,0,0.06)]'
+                    }`}
+                  >
+                    {/* Gradient border effect */}
+                    <div className={`absolute -inset-[1px] rounded-2xl bg-gradient-to-r from-superteam-purple-400 via-superteam-purple to-superteam-purple-600 opacity-0 transition-opacity duration-300 ${isFocused ? 'opacity-100' : ''}`} />
 
-              {/* Main Input Card */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="bg-white rounded-2xl shadow-sm border border-superteam-slate-200 p-8"
-              >
-                <div className="space-y-6">
-                  <div className="flex items-center gap-2 text-superteam-slate-700">
-                    <Search className="w-5 h-5" />
-                    <span className="font-medium">Enter GitHub URL</span>
+                    <div className="relative bg-white rounded-2xl">
+                      <div className="flex items-center gap-3 p-4">
+                        <div className="flex-1">
+                          <input
+                            ref={inputRef}
+                            type="text"
+                            value={inputUrl}
+                            onChange={(e) => setInputUrl(e.target.value)}
+                            onFocus={() => setIsFocused(true)}
+                            onBlur={() => setIsFocused(false)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleReview()}
+                            placeholder="Paste a GitHub PR or repository URL..."
+                            className="w-full text-lg bg-transparent outline-none placeholder:text-superteam-slate-400"
+                          />
+                        </div>
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => handleReview()}
+                          disabled={!inputUrl.trim()}
+                          className={`p-3 rounded-xl transition-all ${
+                            inputUrl.trim()
+                              ? 'bg-gradient-to-r from-superteam-purple to-superteam-purple-dark text-white shadow-lg shadow-superteam-purple/25'
+                              : 'bg-superteam-slate-100 text-superteam-slate-400'
+                          }`}
+                        >
+                          <Send className="w-5 h-5" />
+                        </motion.button>
+                      </div>
+                    </div>
                   </div>
 
-                  <UrlInput onSubmit={handleReview} isLoading={isLoading} />
-
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm text-superteam-slate-500">Try:</span>
+                  {/* Quick examples */}
+                  <div className="flex items-center justify-center gap-2 mt-4 flex-wrap">
+                    <span className="text-sm text-superteam-slate-400">Try:</span>
                     {EXAMPLE_URLS.map((ex) => (
                       <button
                         key={ex.url}
-                        onClick={() => handleReview(ex.url)}
-                        className="text-sm text-superteam-purple hover:text-superteam-purple-dark underline underline-offset-2"
+                        onClick={() => {
+                          setInputUrl(ex.url);
+                          handleReview(ex.url);
+                        }}
+                        className="text-sm text-superteam-purple hover:text-superteam-purple-dark hover:underline transition-colors"
                       >
                         {ex.label}
                       </button>
                     ))}
                   </div>
-                </div>
-              </motion.div>
+                </motion.div>
+              </div>
 
-              {/* Review Panel Selection */}
+              {/* Compact Settings */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className="space-y-4"
+                transition={{ delay: 0.3 }}
+                className="max-w-2xl mx-auto space-y-4"
               >
-                <div className="flex items-center gap-2">
-                  <Users className="w-5 h-5 text-superteam-slate-700" />
-                  <h3 className="font-medium text-superteam-slate-900">Review Panel</h3>
-                </div>
+                {/* Review Panel - Compact Pills */}
+                <div className="flex items-center gap-3 flex-wrap">
+                  <span className="text-sm font-medium text-superteam-slate-700 flex items-center gap-1.5">
+                    <Users className="w-4 h-4" />
+                    Panel:
+                  </span>
+                  <div className="flex gap-1.5">
+                    {(Object.keys(PRESET_INFO) as ReviewPanelPreset[]).map((preset) => {
+                      const info = PRESET_INFO[preset];
+                      const isSelected = selectedPreset === preset;
+                      const count = preset === 'custom' ? customJudges.size : info.count;
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {(Object.keys(PRESET_INFO) as ReviewPanelPreset[]).map((preset) => {
-                    const info = PRESET_INFO[preset];
-                    const isSelected = selectedPreset === preset;
-                    const count = preset === 'custom' ? customJudges.size : info.count;
-
-                    return (
-                      <button
-                        key={preset}
-                        onClick={() => setSelectedPreset(preset)}
-                        className={`relative p-4 rounded-xl border-2 text-left transition-all ${
-                          isSelected
-                            ? 'border-superteam-purple bg-superteam-purple-50'
-                            : 'border-superteam-slate-200 hover:border-superteam-slate-300 bg-white'
-                        }`}
-                      >
-                        {isSelected && (
-                          <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-superteam-purple flex items-center justify-center">
-                            <Check className="w-3 h-3 text-white" />
-                          </div>
-                        )}
-                        <p className={`font-semibold ${isSelected ? 'text-superteam-purple' : 'text-superteam-slate-900'}`}>
-                          {info.name}
-                        </p>
-                        <p className="text-sm text-superteam-slate-500">{info.desc}</p>
-                        <p className={`text-xs mt-2 ${isSelected ? 'text-superteam-purple' : 'text-superteam-slate-400'}`}>
-                          {count} judges
-                        </p>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Custom Selection */}
-                {selectedPreset === 'custom' && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    className="bg-white rounded-xl border border-superteam-slate-200 p-4"
-                  >
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      {ALL_JUDGES.map((id) => {
-                        const judge = JUDGES[id];
-                        const isSelected = customJudges.has(id);
-                        return (
-                          <button
-                            key={id}
-                            onClick={() => toggleJudge(id)}
-                            className={`flex items-center gap-2 p-3 rounded-lg border transition-all ${
-                              isSelected
-                                ? 'border-superteam-purple bg-superteam-purple-50 text-superteam-purple'
-                                : 'border-superteam-slate-200 hover:border-superteam-slate-300 text-superteam-slate-700'
-                            }`}
-                          >
-                            <span>{judge.icon}</span>
-                            <span className="text-sm font-medium">{judge.name.split(' ')[0]}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* Selected Preview */}
-                {selectedPreset !== 'custom' && (
-                  <div className="flex flex-wrap gap-2">
-                    {PANEL_PRESETS[selectedPreset].map((id) => (
-                      <span key={id} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full border border-superteam-slate-200 text-sm">
-                        <span>{JUDGES[id].icon}</span>
-                        <span className="text-superteam-slate-700">{JUDGES[id].name}</span>
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </motion.div>
-
-              {/* Model Selection */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
-                className="space-y-4"
-              >
-                <div className="flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-superteam-slate-700" />
-                  <h3 className="font-medium text-superteam-slate-900">AI Model</h3>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {MODEL_ORDER.slice(0, 4).map((modelId) => {
-                    const model = MODELS[modelId];
-                    const isSelected = selectedModel === modelId;
-                    return (
-                      <button
-                        key={modelId}
-                        onClick={() => setSelectedModel(modelId)}
-                        className={`p-4 rounded-xl border-2 text-left transition-all ${
-                          isSelected
-                            ? 'border-superteam-purple bg-superteam-purple-50'
-                            : 'border-superteam-slate-200 hover:border-superteam-slate-300 bg-white'
-                        }`}
-                      >
-                        <div className="flex justify-between items-start">
-                          <span className={`font-medium ${isSelected ? 'text-superteam-purple' : 'text-superteam-slate-900'}`}>
-                            {model.name}
-                          </span>
-                          <span className={`text-xs font-semibold px-2 py-0.5 rounded ${
-                            model.costTier === '$' ? 'bg-green-100 text-green-700' :
-                            model.costTier === '$$' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
-                          }`}>{model.costTier}</span>
-                        </div>
-                        <p className="text-xs text-superteam-slate-500 mt-1">{model.speed} • {model.contextWindow}</p>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Show more models toggle */}
-                <details className="group">
-                  <summary className="text-sm text-superteam-purple cursor-pointer hover:underline">
-                    Show all {MODEL_ORDER.length} models
-                  </summary>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
-                    {MODEL_ORDER.slice(4).map((modelId) => {
-                      const model = MODELS[modelId];
-                      const isSelected = selectedModel === modelId;
                       return (
                         <button
-                          key={modelId}
-                          onClick={() => setSelectedModel(modelId)}
-                          className={`p-3 rounded-lg border text-left transition-all ${
+                          key={preset}
+                          onClick={() => setSelectedPreset(preset)}
+                          className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
                             isSelected
-                              ? 'border-superteam-purple bg-superteam-purple-50'
-                              : 'border-superteam-slate-200 hover:border-superteam-slate-300 bg-white'
+                              ? 'bg-superteam-purple text-white shadow-md shadow-superteam-purple/25'
+                              : 'bg-superteam-slate-100 text-superteam-slate-600 hover:bg-superteam-slate-200'
                           }`}
                         >
-                          <span className={`text-sm font-medium ${isSelected ? 'text-superteam-purple' : 'text-superteam-slate-900'}`}>
-                            {model.name}
+                          {info.name}
+                          <span className={`ml-1 ${isSelected ? 'text-white/70' : 'text-superteam-slate-400'}`}>
+                            {count}
                           </span>
                         </button>
                       );
                     })}
                   </div>
-                </details>
+                </div>
+
+                {/* Custom Judges - Compact Grid (only when custom selected) */}
+                <AnimatePresence>
+                  {selectedPreset === 'custom' && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="flex flex-wrap gap-2 pl-16">
+                        {ALL_JUDGES.map((id) => {
+                          const judge = JUDGES[id];
+                          const isSelected = customJudges.has(id);
+                          return (
+                            <button
+                              key={id}
+                              onClick={() => toggleJudge(id)}
+                              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+                                isSelected
+                                  ? 'bg-superteam-purple-100 text-superteam-purple border border-superteam-purple/30'
+                                  : 'bg-superteam-slate-100 text-superteam-slate-500 hover:bg-superteam-slate-200'
+                              }`}
+                            >
+                              <span>{judge.icon}</span>
+                              {judge.name.split(' ')[0]}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Model - Compact Dropdown */}
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-medium text-superteam-slate-700 flex items-center gap-1.5">
+                    <Zap className="w-4 h-4" />
+                    Model:
+                  </span>
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowModelDropdown(!showModelDropdown)}
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-superteam-slate-100 hover:bg-superteam-slate-200 text-sm font-medium text-superteam-slate-700 transition-all"
+                    >
+                      {selectedModelInfo.name}
+                      <span className={`text-xs px-1.5 py-0.5 rounded ${
+                        selectedModelInfo.costTier === '$' ? 'bg-green-100 text-green-700' :
+                        selectedModelInfo.costTier === '$$' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
+                      }`}>{selectedModelInfo.costTier}</span>
+                      <ChevronDown className={`w-4 h-4 transition-transform ${showModelDropdown ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    <AnimatePresence>
+                      {showModelDropdown && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="absolute top-full left-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-superteam-slate-200 overflow-hidden z-50"
+                        >
+                          {MODEL_ORDER.map((modelId) => {
+                            const model = MODELS[modelId];
+                            const isSelected = selectedModel === modelId;
+                            return (
+                              <button
+                                key={modelId}
+                                onClick={() => {
+                                  setSelectedModel(modelId);
+                                  setShowModelDropdown(false);
+                                }}
+                                className={`w-full flex items-center justify-between px-4 py-2.5 text-left text-sm transition-colors ${
+                                  isSelected
+                                    ? 'bg-superteam-purple-50 text-superteam-purple'
+                                    : 'hover:bg-superteam-slate-50 text-superteam-slate-700'
+                                }`}
+                              >
+                                <div>
+                                  <span className="font-medium">{model.name}</span>
+                                  <span className="text-xs text-superteam-slate-400 ml-2">{model.speed}</span>
+                                </div>
+                                <span className={`text-xs px-1.5 py-0.5 rounded ${
+                                  model.costTier === '$' ? 'bg-green-100 text-green-700' :
+                                  model.costTier === '$$' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
+                                }`}>{model.costTier}</span>
+                              </button>
+                            );
+                          })}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
+
+                {/* Error */}
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="bg-red-50 border border-red-200 rounded-xl p-4 text-center"
+                  >
+                    <p className="text-red-700 text-sm">{error}</p>
+                    <button onClick={handleReset} className="text-red-600 text-sm underline mt-1">
+                      Try Again
+                    </button>
+                  </motion.div>
+                )}
               </motion.div>
 
-              {/* Error */}
-              {error && (
-                <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                  <p className="text-red-700">{error}</p>
-                  <Button variant="outline" size="sm" onClick={handleReset} className="mt-2">
-                    Try Again
-                  </Button>
-                </div>
-              )}
-
-              {/* Features */}
+              {/* Features - Compact */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.7 }}
-                className="grid md:grid-cols-3 gap-6 pt-8 border-t border-superteam-slate-200"
+                transition={{ delay: 0.4 }}
+                className="flex justify-center gap-8 pt-12 text-center"
               >
                 {[
-                  { title: 'Multi-Expert Analysis', desc: '8 specialized AI judges review your code', icon: Users },
-                  { title: 'Instant Feedback', desc: 'Get comprehensive reviews in seconds', icon: Zap },
-                  { title: 'Actionable Insights', desc: 'Clear suggestions for improvement', icon: ArrowRight },
+                  { icon: Users, label: '8 AI Judges' },
+                  { icon: Zap, label: 'Instant Results' },
+                  { icon: ArrowRight, label: 'Actionable Insights' },
                 ].map((feature, i) => (
-                  <div key={i} className="flex gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-superteam-purple-100 flex items-center justify-center shrink-0">
-                      <feature.icon className="w-5 h-5 text-superteam-purple" />
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-superteam-slate-900">{feature.title}</h4>
-                      <p className="text-sm text-superteam-slate-600">{feature.desc}</p>
-                    </div>
+                  <div key={i} className="flex items-center gap-2 text-superteam-slate-500">
+                    <feature.icon className="w-4 h-4" />
+                    <span className="text-sm">{feature.label}</span>
                   </div>
                 ))}
               </motion.div>
@@ -410,7 +420,7 @@ export default function Home() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="text-center py-16 space-y-6"
+              className="text-center py-20 space-y-6"
             >
               <div className="relative w-20 h-20 mx-auto">
                 <motion.div
@@ -513,6 +523,14 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* Click outside to close dropdown */}
+      {showModelDropdown && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={() => setShowModelDropdown(false)}
+        />
+      )}
     </div>
   );
 }

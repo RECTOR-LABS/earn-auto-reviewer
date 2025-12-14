@@ -85,16 +85,16 @@ const codeSnippetSchema = z.object({
 });
 
 const fullReportSchema = z.object({
-  detailedAnalysis: z.array(detailedAnalysisSchema).min(1),
-  fileBreakdown: z.array(fileBreakdownSchema).min(1),
-  recommendations: z.array(recommendationSchema).min(1),
-  codeSnippets: z.array(codeSnippetSchema).min(0), // Optional, may be empty
+  detailedAnalysis: z.array(detailedAnalysisSchema).default([]),
+  fileBreakdown: z.array(fileBreakdownSchema).default([]),
+  recommendations: z.array(recommendationSchema).default([]),
+  codeSnippets: z.array(codeSnippetSchema).default([]),
 });
 
 const multiJudgeReviewSchema = z.object({
   overall: overallScoreSchema,
   judges: z.array(judgeReviewSchema).min(1),
-  fullReport: fullReportSchema,
+  fullReport: fullReportSchema.optional(),
 });
 
 // ============================================
@@ -192,10 +192,18 @@ function parseMultiJudgeResponse(
       validated.overall.grade = calculateGrade(avgScore);
     }
 
+    // Provide default fullReport if missing
+    const defaultFullReport: FullReport = {
+      detailedAnalysis: [],
+      fileBreakdown: [],
+      recommendations: [],
+      codeSnippets: [],
+    };
+
     return {
       overall: validated.overall as OverallScore,
       judges: validated.judges as JudgeReview[],
-      fullReport: validated.fullReport as FullReport,
+      fullReport: (validated.fullReport as FullReport) || defaultFullReport,
     };
   } catch (error) {
     console.error('[Reviewer] Parse error:', error);

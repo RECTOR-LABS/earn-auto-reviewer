@@ -6,7 +6,14 @@ import { ReviewDisplay } from '@/components/review-display';
 import { LoadingState } from '@/components/loading-state';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ReviewResult } from '@/types';
+import { Badge } from '@/components/ui/badge';
+import {
+  ReviewResult,
+  JudgeId,
+  ReviewPanelPreset,
+  PANEL_PRESETS,
+  JUDGES,
+} from '@/types';
 
 // Pre-loaded examples from Superteam Earn submissions
 const EXAMPLE_URLS = [
@@ -32,13 +39,64 @@ const EXAMPLE_URLS = [
   },
 ];
 
+// Preset descriptions
+const PRESET_INFO: Record<ReviewPanelPreset, { name: string; description: string }> = {
+  quick: {
+    name: 'Quick Review',
+    description: '3 essential judges for fast feedback',
+  },
+  standard: {
+    name: 'Standard Review',
+    description: '5 judges covering key areas',
+  },
+  comprehensive: {
+    name: 'Comprehensive Review',
+    description: 'All 8 expert judges for thorough analysis',
+  },
+  custom: {
+    name: 'Custom Selection',
+    description: 'Choose your own judges',
+  },
+};
+
+// All judge IDs for selection
+const ALL_JUDGES: JudgeId[] = [
+  'security',
+  'performance',
+  'architecture',
+  'code-quality',
+  'testing',
+  'devops',
+  'documentation',
+  'dx',
+];
+
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [review, setReview] = useState<ReviewResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [currentUrl, setCurrentUrl] = useState('');
 
+  // Judge selection state
+  const [selectedPreset, setSelectedPreset] = useState<ReviewPanelPreset>('comprehensive');
+  const [customJudges, setCustomJudges] = useState<Set<JudgeId>>(new Set(ALL_JUDGES));
+
+  // Get effective judges based on selection
+  const getSelectedJudges = (): JudgeId[] => {
+    if (selectedPreset === 'custom') {
+      return Array.from(customJudges);
+    }
+    return PANEL_PRESETS[selectedPreset];
+  };
+
   const handleReview = async (url: string) => {
+    const judges = getSelectedJudges();
+
+    if (judges.length === 0) {
+      setError('Please select at least one judge for the review.');
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     setReview(null);
@@ -50,13 +108,16 @@ export default function Home() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({
+          url,
+          preset: selectedPreset !== 'custom' ? selectedPreset : undefined,
+          judges: selectedPreset === 'custom' ? judges : undefined,
+        }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        // Handle API errors
         throw new Error(data.error || 'Failed to review submission');
       }
 
@@ -78,6 +139,26 @@ export default function Home() {
     handleReview(url);
   };
 
+  const toggleCustomJudge = (id: JudgeId) => {
+    setCustomJudges((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const selectAllJudges = () => {
+    setCustomJudges(new Set(ALL_JUDGES));
+  };
+
+  const clearAllJudges = () => {
+    setCustomJudges(new Set());
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-50 to-zinc-100 dark:from-zinc-950 dark:to-zinc-900">
       {/* Hero Section */}
@@ -91,8 +172,8 @@ export default function Home() {
               </span>
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              AI-powered GitHub submission reviews for Superteam Earn bounties.
-              Get instant scores and actionable feedback on pull requests and repositories.
+              AI-powered GitHub submission reviews with a panel of 8 expert judges.
+              Get comprehensive scores and actionable feedback from multiple perspectives.
             </p>
             <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
               <a
@@ -103,7 +184,7 @@ export default function Home() {
               >
                 View Bounty
               </a>
-              <span>•</span>
+              <span>|</span>
               <a
                 href="https://github.com/RECTOR-LABS/earn-auto-reviewer"
                 target="_blank"
@@ -133,8 +214,103 @@ export default function Home() {
 
                 <UrlInput onSubmit={handleReview} isLoading={isLoading} />
 
+                {/* Judge Panel Selection */}
+                <div className="space-y-4 pt-4 border-t">
+                  <div className="space-y-2">
+                    <h3 className="font-medium">Select Review Panel</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Choose which expert judges will evaluate your submission
+                    </p>
+                  </div>
+
+                  {/* Preset Buttons */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    {(Object.keys(PRESET_INFO) as ReviewPanelPreset[]).map((preset) => (
+                      <button
+                        key={preset}
+                        onClick={() => setSelectedPreset(preset)}
+                        className={`p-3 rounded-lg border text-left transition-colors ${
+                          selectedPreset === preset
+                            ? 'border-primary bg-primary/5 ring-1 ring-primary'
+                            : 'border-muted hover:border-primary/50'
+                        }`}
+                      >
+                        <p className="font-medium text-sm">{PRESET_INFO[preset].name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {PRESET_INFO[preset].description}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Custom Judge Selection */}
+                  {selectedPreset === 'custom' && (
+                    <div className="space-y-3 p-4 rounded-lg bg-muted/30">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-medium">
+                          Selected: {customJudges.size} of {ALL_JUDGES.length} judges
+                        </p>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={selectAllJudges}
+                            className="text-xs text-primary hover:underline"
+                          >
+                            Select All
+                          </button>
+                          <span className="text-muted-foreground">|</span>
+                          <button
+                            onClick={clearAllJudges}
+                            className="text-xs text-primary hover:underline"
+                          >
+                            Clear
+                          </button>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        {ALL_JUDGES.map((id) => {
+                          const judge = JUDGES[id];
+                          const isSelected = customJudges.has(id);
+                          return (
+                            <button
+                              key={id}
+                              onClick={() => toggleCustomJudge(id)}
+                              className={`p-2 rounded-lg border text-left transition-colors ${
+                                isSelected
+                                  ? 'border-primary bg-primary/10'
+                                  : 'border-muted bg-background hover:border-muted-foreground/30'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2">
+                                <span>{judge.icon}</span>
+                                <span className="text-xs font-medium truncate">
+                                  {judge.name}
+                                </span>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Selected Judges Preview (for presets) */}
+                  {selectedPreset !== 'custom' && (
+                    <div className="flex flex-wrap gap-2">
+                      {PANEL_PRESETS[selectedPreset].map((id) => {
+                        const judge = JUDGES[id];
+                        return (
+                          <Badge key={id} variant="secondary" className="gap-1">
+                            <span>{judge.icon}</span>
+                            {judge.name}
+                          </Badge>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
                 {/* Pre-loaded Examples */}
-                <div className="space-y-3">
+                <div className="space-y-3 pt-4 border-t">
                   <p className="text-sm font-medium text-muted-foreground">
                     Or try an example:
                   </p>
@@ -179,24 +355,24 @@ export default function Home() {
               {/* Features Section */}
               <div className="grid md:grid-cols-3 gap-4 mt-8">
                 <Card className="p-4">
-                  <h3 className="font-semibold mb-2">🎯 Smart Scoring</h3>
+                  <h3 className="font-semibold mb-2">8 Expert Judges</h3>
                   <p className="text-sm text-muted-foreground">
-                    Comprehensive 0-100 score based on code quality, completeness,
-                    testing, and innovation.
+                    Security, Performance, Architecture, Code Quality, Testing, DevOps,
+                    Documentation, and Developer Experience experts.
                   </p>
                 </Card>
                 <Card className="p-4">
-                  <h3 className="font-semibold mb-2">⚡ Fast Review</h3>
+                  <h3 className="font-semibold mb-2">Severity Levels</h3>
                   <p className="text-sm text-muted-foreground">
-                    Get results in under 15 seconds with AI-powered analysis using
-                    Claude Sonnet 3.5.
+                    Findings categorized as Critical, Warning, or Info with actionable
+                    suggestions for improvement.
                   </p>
                 </Card>
                 <Card className="p-4">
-                  <h3 className="font-semibold mb-2">📝 Actionable Feedback</h3>
+                  <h3 className="font-semibold mb-2">Smart Caching</h3>
                   <p className="text-sm text-muted-foreground">
-                    Receive 3-5 specific, actionable notes to improve your
-                    submission quality.
+                    Reviews are cached per commit hash. Same code = instant results.
+                    Changes trigger fresh analysis.
                   </p>
                 </Card>
               </div>
@@ -209,20 +385,20 @@ export default function Home() {
               <div className="text-center space-y-2">
                 <h2 className="text-xl font-semibold">Reviewing Submission...</h2>
                 <p className="text-sm text-muted-foreground">
-                  Analyzing code quality, completeness, and best practices
+                  Our expert panel is analyzing your code from multiple perspectives
                 </p>
               </div>
-              <LoadingState />
+              <LoadingState judgeCount={getSelectedJudges().length} />
             </div>
           )}
 
           {/* Review Results */}
           {review && !isLoading && (
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap gap-4">
                 <div>
                   <h2 className="text-xl font-semibold">Review Complete</h2>
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <p className="text-sm text-muted-foreground mt-1 break-all">
                     {currentUrl}
                   </p>
                 </div>

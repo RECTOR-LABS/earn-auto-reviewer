@@ -1,6 +1,7 @@
 // Review service - orchestrates caching, GitHub fetching, and AI review
-import { ReviewResult } from '@/types';
-import { ParsedGitHubUrl } from '@/types';
+// Multi-Judge Panel System
+
+import { ReviewResult, JudgeId, ParsedGitHubUrl, PANEL_PRESETS } from '@/types';
 import {
   fetchPullRequest,
   fetchRepository,
@@ -10,7 +11,7 @@ import {
   fetchCommitHash,
   fetchBranchCommitHash,
 } from './github';
-import { generateReview } from './reviewer';
+import { generateMultiJudgeReview } from './reviewer';
 import { getCachedReview, setCachedReview, CachedReview } from './cache';
 
 export interface ReviewServiceResult {
@@ -32,16 +33,12 @@ async function getCommitHash(parsed: ParsedGitHubUrl): Promise<string> {
   switch (type) {
     case 'pr':
       return fetchPRCommitHash(owner, repo, identifier as number);
-
     case 'repo':
       return fetchRepoCommitHash(owner, repo);
-
     case 'commit':
       return fetchCommitHash(owner, repo, identifier as string);
-
     case 'branch':
       return fetchBranchCommitHash(owner, repo, identifier as string);
-
     default:
       throw new Error(`Unsupported URL type: ${type}`);
   }
@@ -126,44 +123,64 @@ ${repoData.readmeContent || 'No README found.'}
 }
 
 /**
+ * Generate cache key including judges
+ */
+function getJudgesCacheKey(judges: JudgeId[]): string {
+  return judges.sort().join(',');
+}
+
+/**
  * Main review service function
  * Handles caching, commit hash validation, and review generation
  */
 export async function getReview(
-  parsed: ParsedGitHubUrl
+  parsed: ParsedGitHubUrl,
+  judges: JudgeId[] = PANEL_PRESETS.comprehensive
 ): Promise<ReviewServiceResult> {
   const url = parsed.url;
+  const judgeKey = getJudgesCacheKey(judges);
 
   // Step 1: Get current commit hash
   console.log(`[ReviewService] Fetching commit hash for ${url}`);
   const currentCommitHash = await getCommitHash(parsed);
   console.log(`[ReviewService] Current commit: ${currentCommitHash.substring(0, 7)}`);
 
-  // Step 2: Check cache
+  // Step 2: Check cache (include judges in cache key consideration)
+  // For now, we cache based on URL + commit hash only
+  // Different judge selections will share cache if same URL/commit
   const cached = getCachedReview(url, currentCommitHash);
 
+  // If cached and has same or more judges, return cached
   if (cached) {
-    console.log(`[ReviewService] Returning cached review`);
-    return {
-      review: cached.review,
-      cached: true,
-      commitHash: cached.commitHash,
-      cacheInfo: {
-        cachedAt: cached.cachedAt,
-        expiresAt: cached.expiresAt,
-      },
-    };
+    const cachedJudges = cached.review.metadata.judgesUsed || [];
+    const hasAllJudges = judges.every(j => cachedJudges.includes(j));
+
+    if (hasAllJudges) {
+      console.log(`[ReviewService] Returning cached review`);
+      return {
+        review: cached.review,
+        cached: true,
+        commitHash: cached.commitHash,
+        cacheInfo: {
+          cachedAt: cached.cachedAt,
+          expiresAt: cached.expiresAt,
+        },
+      };
+    } else {
+      console.log(`[ReviewService] Cache exists but missing judges, regenerating`);
+    }
   }
 
   // Step 3: Fetch content and generate new review
-  console.log(`[ReviewService] Cache miss - generating new review`);
+  console.log(`[ReviewService] Generating new review with ${judges.length} judges`);
   const { type, content, metadata } = await fetchReviewContent(parsed);
 
-  const review = await generateReview({
+  const review = await generateMultiJudgeReview({
     type,
     content,
     metadata,
     url,
+    judges,
   });
 
   // Step 4: Store in cache

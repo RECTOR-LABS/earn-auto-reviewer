@@ -1,59 +1,46 @@
-// Scoring logic for code reviews
-import { ReviewScore } from '@/types';
-
-/**
- * Validate and normalize review scores
- */
-export function validateScore(score: ReviewScore): ReviewScore {
-  const { breakdown } = score;
-
-  // Ensure scores are within valid ranges
-  const normalized = {
-    codeQuality: Math.min(Math.max(breakdown.codeQuality, 0), 40),
-    completeness: Math.min(Math.max(breakdown.completeness, 0), 30),
-    testing: Math.min(Math.max(breakdown.testing, 0), 20),
-    innovation: Math.min(Math.max(breakdown.innovation, 0), 10),
-  };
-
-  const total = Math.min(
-    Math.max(
-      normalized.codeQuality +
-        normalized.completeness +
-        normalized.testing +
-        normalized.innovation,
-      0
-    ),
-    100
-  );
-
-  return {
-    total,
-    breakdown: normalized,
-  };
-}
+// Scoring utility functions for code reviews
+// Note: Grades now come from AI, but these utilities are still useful for display
 
 /**
  * Get score grade (A+, A, B+, etc.)
+ * Used for display purposes when needed
  */
 export function getScoreGrade(total: number): string {
   if (total >= 95) return 'A+';
   if (total >= 90) return 'A';
-  if (total >= 85) return 'A-';
-  if (total >= 80) return 'B+';
-  if (total >= 75) return 'B';
-  if (total >= 70) return 'B-';
-  if (total >= 65) return 'C+';
-  if (total >= 60) return 'C';
-  if (total >= 55) return 'C-';
-  if (total >= 50) return 'D';
+  if (total >= 85) return 'B+';
+  if (total >= 80) return 'B';
+  if (total >= 75) return 'C+';
+  if (total >= 70) return 'C';
+  if (total >= 60) return 'D';
   return 'F';
 }
 
 /**
- * Get score color for UI display
+ * Get score color class for UI display
  */
 export function getScoreColor(total: number): string {
   if (total >= 80) return 'text-green-600';
   if (total >= 60) return 'text-yellow-600';
+  return 'text-red-600';
+}
+
+/**
+ * Get score background color class
+ */
+export function getScoreBackground(total: number): string {
+  if (total >= 80) return 'bg-green-100 dark:bg-green-900';
+  if (total >= 60) return 'bg-yellow-100 dark:bg-yellow-900';
+  return 'bg-red-100 dark:bg-red-900';
+}
+
+/**
+ * Get grade color class
+ */
+export function getGradeColor(grade: string): string {
+  if (grade.startsWith('A')) return 'text-green-600';
+  if (grade.startsWith('B')) return 'text-blue-600';
+  if (grade.startsWith('C')) return 'text-yellow-600';
+  if (grade.startsWith('D')) return 'text-orange-600';
   return 'text-red-600';
 }

@@ -17,19 +17,15 @@ interface CacheStore {
 }
 
 // In-memory cache store
-// Note: This resets on serverless cold starts
-// Production should use Redis or Vercel KV
 const cacheStore: CacheStore = {};
 
-// Cache TTL: 24 hours (even with same commit, reviews might need refresh)
+// Cache TTL: 24 hours
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
 /**
  * Generate cache key from URL
- * Normalizes URLs to avoid duplicates
  */
 export function getCacheKey(url: string): string {
-  // Normalize URL: remove trailing slashes, lowercase
   const normalized = url
     .toLowerCase()
     .replace(/\/$/, '')
@@ -40,10 +36,6 @@ export function getCacheKey(url: string): string {
 
 /**
  * Get cached review if valid
- * Returns null if:
- * - No cache entry exists
- * - Cache has expired
- * - Commit hash doesn't match (code changed)
  */
 export function getCachedReview(
   url: string,
@@ -64,7 +56,7 @@ export function getCachedReview(
     return null;
   }
 
-  // Check commit hash - if code changed, invalidate cache
+  // Check commit hash
   if (cached.commitHash !== currentCommitHash) {
     console.log(`[Cache] STALE - Commit hash changed for ${url}`);
     console.log(`[Cache]   Cached: ${cached.commitHash.substring(0, 7)}`);
@@ -98,11 +90,11 @@ export function setCachedReview(
 
   console.log(`[Cache] SET - Cached review for ${url}`);
   console.log(`[Cache]   Commit: ${commitHash.substring(0, 7)}`);
-  console.log(`[Cache]   Expires: ${cacheStore[key].expiresAt}`);
+  console.log(`[Cache]   Judges: ${review.metadata.judgesUsed?.length || 0}`);
 }
 
 /**
- * Invalidate cache entry for URL
+ * Invalidate cache entry
  */
 export function invalidateCache(url: string): boolean {
   const key = getCacheKey(url);
@@ -115,7 +107,7 @@ export function invalidateCache(url: string): boolean {
 }
 
 /**
- * Get cache statistics (for debugging/monitoring)
+ * Get cache statistics
  */
 export function getCacheStats(): {
   entries: number;
@@ -127,7 +119,7 @@ export function getCacheStats(): {
 }
 
 /**
- * Clear all cache entries
+ * Clear all cache
  */
 export function clearCache(): void {
   Object.keys(cacheStore).forEach(key => delete cacheStore[key]);

@@ -789,7 +789,7 @@ export async function onSubmissionCreated(
                 </Button>
               </Link>
               <a href="https://github.com/RECTOR-LABS/earn-auto-reviewer" target="_blank">
-                <Button variant="outline" className="border-2 border-white text-white hover:bg-white hover:text-superteam-purple">
+                <Button className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-superteam-purple">
                   <Github className="w-4 h-4 mr-2" />
                   View Repository
                 </Button>

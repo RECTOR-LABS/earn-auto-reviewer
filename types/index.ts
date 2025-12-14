@@ -200,6 +200,7 @@ export type ModelId =
   | 'anthropic/claude-3.5-haiku'
   | 'google/gemini-2.5-flash'
   | 'openai/gpt-5.1'
+  | 'openai/gpt-4.1'
   | 'anthropic/claude-sonnet-4.5'
   | 'anthropic/claude-opus-4.5'
   | 'google/gemini-2.5-pro';
@@ -265,6 +266,17 @@ export const MODELS: Record<ModelId, ModelInfo> = {
     speed: 'Fast',
     contextWindow: '128K',
   },
+  'openai/gpt-4.1': {
+    id: 'openai/gpt-4.1',
+    name: 'GPT-4.1',
+    provider: 'OpenAI',
+    description: 'Coding specialist - 1M context',
+    costTier: '$$',
+    inputCost: '$2/M',
+    outputCost: '$8/M',
+    speed: 'Fast',
+    contextWindow: '1M',
+  },
   'anthropic/claude-sonnet-4.5': {
     id: 'anthropic/claude-sonnet-4.5',
     name: 'Claude Sonnet 4.5',
@@ -306,6 +318,7 @@ export const MODEL_ORDER: ModelId[] = [
   'google/gemini-2.5-flash',
   'anthropic/claude-3.5-haiku',
   'openai/gpt-5.1',
+  'openai/gpt-4.1',
   'anthropic/claude-sonnet-4.5',
   'google/gemini-2.5-pro',
   'anthropic/claude-opus-4.5',

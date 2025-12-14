@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  parseGitHubUrl,
-  fetchPullRequest,
-  fetchRepository,
-  fetchPRFiles,
-} from '@/lib/github';
-import { generateReview } from '@/lib/reviewer';
+import { parseGitHubUrl } from '@/lib/github';
+import { getReview } from '@/lib/review-service';
 
 export async function POST(request: NextRequest) {
   try {
@@ -37,143 +32,62 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Handle different GitHub resource types
-    let reviewData;
-    let content = '';
-    let metadata: Record<string, any> = {};
-
-    if (parsed.type === 'pr' && typeof parsed.identifier === 'number') {
-      // Fetch PR data
-      try {
-        const prData = await fetchPullRequest(
-          parsed.owner,
-          parsed.repo,
-          parsed.identifier
-        );
-
-        // Fetch PR files and diff
-        const prFiles = await fetchPRFiles(
-          parsed.owner,
-          parsed.repo,
-          parsed.identifier
-        );
-
-        // Prepare content for LLM
-        content = `
-# Pull Request: ${prData.title}
-
-**Author:** ${prData.author}
-**Status:** ${prData.isDraft ? 'Draft' : 'Ready for Review'}
-
-## Description
-${prData.body || 'No description provided'}
-
-## Changes Summary
-- Files Changed: ${prData.changedFiles}
-- Additions: +${prData.additions}
-- Deletions: -${prData.deletions}
-- Commits: ${prData.commits}
-
-## Code Changes
-${prFiles}
-        `.trim();
-
-        metadata = {
-          prNumber: prData.number,
-          author: prData.author,
-          filesChanged: prData.changedFiles,
-          additions: prData.additions,
-          deletions: prData.deletions,
-          isDraft: prData.isDraft,
-        };
-      } catch (error: any) {
-        // Handle GitHub API errors
-        if (error.message.includes('not found')) {
-          return NextResponse.json(
-            {
-              error: error.message,
-              code: 'GITHUB_NOT_FOUND',
-            },
-            { status: 404 }
-          );
-        }
-        if (error.message.includes('Access denied') || error.message.includes('private')) {
-          return NextResponse.json(
-            {
-              error: error.message,
-              code: 'GITHUB_FORBIDDEN',
-            },
-            { status: 403 }
-          );
-        }
-        throw error;
-      }
-    } else if (parsed.type === 'repo' || parsed.type === 'commit' || parsed.type === 'branch') {
-      // For repo/commit/branch, treat as repository review
-      try {
-        const repoData = await fetchRepository(parsed.owner, parsed.repo);
-
-        // Prepare content for LLM
-        content = `
-# Repository: ${repoData.name}
-
-**Owner:** ${repoData.owner}
-**Language:** ${repoData.language || 'Not specified'}
-**Stars:** ${repoData.stars}
-
-## Description
-${repoData.description || 'No description provided'}
-
-## README
-${repoData.readmeContent || 'No README available'}
-
-## Project Analysis
-- Has Tests: ${repoData.hasTests ? 'Yes' : 'No'}
-        `.trim();
-
-        metadata = {
-          name: repoData.name,
-          language: repoData.language,
-          stars: repoData.stars,
-          hasTests: repoData.hasTests,
-        };
-      } catch (error: any) {
-        // Handle GitHub API errors
-        if (error.message.includes('not found')) {
-          return NextResponse.json(
-            {
-              error: error.message,
-              code: 'GITHUB_NOT_FOUND',
-            },
-            { status: 404 }
-          );
-        }
-        if (error.message.includes('Access denied') || error.message.includes('private')) {
-          return NextResponse.json(
-            {
-              error: error.message,
-              code: 'GITHUB_FORBIDDEN',
-            },
-            { status: 403 }
-          );
-        }
-        throw error;
-      }
-    }
-
-    // Generate AI review
+    // Get review (handles caching, commit hash validation, and AI generation)
     try {
-      reviewData = await generateReview({
-        type: parsed.type === 'pr' ? 'pr' : 'repo',
-        content,
-        metadata,
-        url: parsed.url,
-      });
+      const result = await getReview(parsed);
 
-      return NextResponse.json(reviewData, { status: 200 });
+      // Return review with cache info
+      return NextResponse.json(
+        {
+          ...result.review,
+          _cache: {
+            hit: result.cached,
+            commitHash: result.commitHash.substring(0, 7),
+            ...(result.cacheInfo && {
+              cachedAt: result.cacheInfo.cachedAt,
+              expiresAt: result.cacheInfo.expiresAt,
+            }),
+          },
+        },
+        { status: 200 }
+      );
     } catch (error: any) {
-      // Handle AI review errors
-      if (error.message.includes('API key')) {
+      // Handle specific error types
+      const errorMessage = error.message || 'Unknown error';
+
+      // GitHub errors
+      if (errorMessage.includes('not found')) {
+        return NextResponse.json(
+          {
+            error: errorMessage,
+            code: 'GITHUB_NOT_FOUND',
+          },
+          { status: 404 }
+        );
+      }
+
+      if (errorMessage.includes('Access denied') || errorMessage.includes('private')) {
+        return NextResponse.json(
+          {
+            error: errorMessage,
+            code: 'GITHUB_FORBIDDEN',
+          },
+          { status: 403 }
+        );
+      }
+
+      if (errorMessage.includes('empty')) {
+        return NextResponse.json(
+          {
+            error: 'Repository is empty (no commits to review)',
+            code: 'GITHUB_EMPTY',
+          },
+          { status: 400 }
+        );
+      }
+
+      // AI/API errors
+      if (errorMessage.includes('API key') || errorMessage.includes('OPENROUTER')) {
         return NextResponse.json(
           {
             error: 'AI service configuration error. Please contact support.',
@@ -182,11 +96,33 @@ ${repoData.readmeContent || 'No README available'}
           { status: 500 }
         );
       }
+
+      if (errorMessage.includes('credits')) {
+        return NextResponse.json(
+          {
+            error: 'AI service credits depleted. Please try again later.',
+            code: 'AI_CREDITS_ERROR',
+          },
+          { status: 503 }
+        );
+      }
+
+      if (errorMessage.includes('Invalid review response') || errorMessage.includes('invalid format')) {
+        return NextResponse.json(
+          {
+            error: 'AI returned an invalid response. Please try again.',
+            code: 'AI_PARSE_ERROR',
+          },
+          { status: 500 }
+        );
+      }
+
+      // Re-throw for generic handler
       throw error;
     }
   } catch (error: any) {
     // Generic error handler
-    console.error('Review API Error:', error);
+    console.error('[API] Review error:', error);
     return NextResponse.json(
       {
         error: error.message || 'An unexpected error occurred',
@@ -195,4 +131,26 @@ ${repoData.readmeContent || 'No README available'}
       { status: 500 }
     );
   }
+}
+
+// GET endpoint to check cache status (useful for debugging)
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const url = searchParams.get('url');
+
+  if (!url) {
+    return NextResponse.json(
+      { error: 'URL parameter required' },
+      { status: 400 }
+    );
+  }
+
+  // Import cache stats
+  const { getCacheStats } = await import('@/lib/cache');
+  const stats = getCacheStats();
+
+  return NextResponse.json({
+    cacheEntries: stats.entries,
+    cachedUrls: stats.urls,
+  });
 }

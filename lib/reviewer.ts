@@ -2,7 +2,7 @@
 import { createOpenAI } from '@ai-sdk/openai';
 import { generateText } from 'ai';
 import { z } from 'zod';
-import { REVIEW_SYSTEM_PROMPT, createReviewPrompt } from './prompts';
+import { REVIEW_SYSTEM_PROMPT, createReviewPrompt, looksLikeJSON } from './prompts';
 import { ReviewResult, ReviewNote } from '@/types';
 import { validateScore } from './scoring';
 
@@ -12,7 +12,8 @@ const openrouter = createOpenAI({
   baseURL: 'https://openrouter.ai/api/v1',
 });
 
-// Response schema for validation
+// Strict response schema for validation
+// This ensures consistent output regardless of LLM used
 const reviewSchema = z.object({
   score: z.object({
     total: z.number().min(0).max(100),
@@ -28,40 +29,77 @@ const reviewSchema = z.object({
       type: z.enum(['positive', 'negative', 'neutral']),
       message: z.string(),
     })
-  ),
+  ).min(1).max(10), // Allow 1-10 notes, prefer 3-5
 });
 
 /**
- * Extract JSON from text that may contain surrounding prose
+ * Extract JSON from text using multiple strategies
+ * Handles: pure JSON, JSON in prose, JSON in markdown code blocks
  */
 function extractJSON(text: string): string {
-  // Try to find JSON object in the text
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  const trimmed = text.trim();
+
+  // Strategy 1: Already valid JSON (starts with { and ends with })
+  if (looksLikeJSON(trimmed)) {
+    return trimmed;
+  }
+
+  // Strategy 2: JSON wrapped in markdown code block
+  const codeBlockMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (codeBlockMatch && codeBlockMatch[1]) {
+    const extracted = codeBlockMatch[1].trim();
+    if (looksLikeJSON(extracted)) {
+      return extracted;
+    }
+  }
+
+  // Strategy 3: Find JSON object in surrounding text
+  // Match from first { to last } (greedy for nested objects)
+  const jsonMatch = trimmed.match(/\{[\s\S]*\}/);
   if (jsonMatch) {
     return jsonMatch[0];
   }
-  // If no JSON found, return original text (will fail validation with clear error)
-  return text;
+
+  // No JSON found - return original (will fail validation with clear error)
+  console.error('[Reviewer] Could not extract JSON from response');
+  console.error('[Reviewer] Response preview:', trimmed.substring(0, 200));
+  return trimmed;
 }
 
 /**
- * Parse and validate review response
+ * Parse and validate review response with multiple fallback strategies
  */
 function parseReviewResponse(text: string): z.infer<typeof reviewSchema> {
-  // First, try direct parsing
+  const extracted = extractJSON(text);
+
   try {
-    const parsed = JSON.parse(text);
-    return reviewSchema.parse(parsed);
-  } catch {
-    // If direct parsing fails, try extracting JSON from text
-    const extracted = extractJSON(text);
-    try {
-      const parsed = JSON.parse(extracted);
-      return reviewSchema.parse(parsed);
-    } catch (extractError) {
-      console.error('Failed to parse extracted JSON:', extracted.substring(0, 200));
-      throw new Error('Invalid review response format');
+    const parsed = JSON.parse(extracted);
+    const validated = reviewSchema.parse(parsed);
+
+    // Ensure total matches breakdown sum
+    const breakdown = validated.score.breakdown;
+    const calculatedTotal =
+      breakdown.codeQuality +
+      breakdown.completeness +
+      breakdown.testing +
+      breakdown.innovation;
+
+    // Auto-correct total if it doesn't match
+    if (validated.score.total !== calculatedTotal) {
+      console.log(`[Reviewer] Auto-correcting total: ${validated.score.total} → ${calculatedTotal}`);
+      validated.score.total = calculatedTotal;
     }
+
+    return validated;
+  } catch (error) {
+    console.error('[Reviewer] JSON parse/validation failed');
+    console.error('[Reviewer] Extracted text:', extracted.substring(0, 300));
+
+    if (error instanceof z.ZodError) {
+      console.error('[Reviewer] Zod errors:', JSON.stringify(error.issues, null, 2));
+    }
+
+    throw new Error('Invalid review response format from AI');
   }
 }
 
@@ -76,18 +114,26 @@ export async function generateReview(params: {
 }): Promise<ReviewResult> {
   const { type, content, metadata, url } = params;
 
+  if (!process.env.OPENROUTER_API_KEY) {
+    throw new Error('OPENROUTER_API_KEY is not configured');
+  }
+
   try {
-    // Use generateText instead of generateObject for more control
+    console.log(`[Reviewer] Generating review for ${type}: ${url}`);
+
+    // Use generateText for maximum control over response parsing
     const result = await generateText({
       model: openrouter('anthropic/claude-3.5-sonnet'),
       system: REVIEW_SYSTEM_PROMPT,
       prompt: createReviewPrompt({ type, content, metadata }),
     });
 
+    console.log(`[Reviewer] Received response (${result.text.length} chars)`);
+
     // Parse and validate the response
     const reviewData = parseReviewResponse(result.text);
 
-    // Validate and normalize scores
+    // Validate and normalize scores (clamp to valid ranges)
     const validatedScore = validateScore(reviewData.score);
 
     return {
@@ -100,18 +146,22 @@ export async function generateReview(params: {
       },
     };
   } catch (error) {
-    console.error('Review generation failed:', error);
+    console.error('[Reviewer] Review generation failed:', error);
 
-    // Provide more specific error messages
+    // Provide specific error messages
     if (error instanceof Error) {
-      if (error.message.includes('API key')) {
+      if (error.message.includes('API key') || error.message.includes('OPENROUTER')) {
         throw new Error('API configuration error. Please check your OpenRouter API key.');
       }
       if (error.message.includes('credits') || error.message.includes('afford')) {
         throw new Error('Insufficient API credits. Please add credits to your OpenRouter account.');
       }
       if (error.message.includes('Invalid review response')) {
-        throw new Error('Failed to parse AI response. Please try again.');
+        throw new Error('AI returned invalid format. Please try again.');
+      }
+      // Pass through known errors
+      if (error.message.includes('not found') || error.message.includes('Access denied')) {
+        throw error;
       }
     }
 

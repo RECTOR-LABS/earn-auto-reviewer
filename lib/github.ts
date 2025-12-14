@@ -241,6 +241,118 @@ export async function fetchRepository(
 }
 
 /**
+ * Fetch the latest commit hash for a PR (head SHA)
+ */
+export async function fetchPRCommitHash(
+  owner: string,
+  repo: string,
+  prNumber: number
+): Promise<string> {
+  try {
+    const { data: pr } = await octokit.rest.pulls.get({
+      owner,
+      repo,
+      pull_number: prNumber,
+    });
+
+    return pr.head.sha;
+  } catch (error: any) {
+    if (error.status === 404) {
+      throw new Error(`Pull request #${prNumber} not found in ${owner}/${repo}`);
+    }
+    throw new Error(`Failed to fetch PR commit hash: ${error.message || 'Unknown error'}`);
+  }
+}
+
+/**
+ * Fetch the latest commit hash for a repository (default branch)
+ */
+export async function fetchRepoCommitHash(
+  owner: string,
+  repo: string
+): Promise<string> {
+  try {
+    // Get repo info to find default branch
+    const { data: repoData } = await octokit.rest.repos.get({
+      owner,
+      repo,
+    });
+
+    // Get the latest commit on default branch
+    const { data: commits } = await octokit.rest.repos.listCommits({
+      owner,
+      repo,
+      sha: repoData.default_branch,
+      per_page: 1,
+    });
+
+    if (commits.length === 0) {
+      throw new Error('No commits found in repository');
+    }
+
+    return commits[0].sha;
+  } catch (error: any) {
+    if (error.status === 404) {
+      throw new Error(`Repository ${owner}/${repo} not found`);
+    }
+    if (error.status === 409) {
+      // Empty repository
+      throw new Error('Repository is empty (no commits)');
+    }
+    throw new Error(`Failed to fetch repo commit hash: ${error.message || 'Unknown error'}`);
+  }
+}
+
+/**
+ * Fetch commit hash for a specific commit URL
+ */
+export async function fetchCommitHash(
+  owner: string,
+  repo: string,
+  commitSha: string
+): Promise<string> {
+  try {
+    // Verify the commit exists and get full SHA
+    const { data: commit } = await octokit.rest.git.getCommit({
+      owner,
+      repo,
+      commit_sha: commitSha,
+    });
+
+    return commit.sha;
+  } catch (error: any) {
+    if (error.status === 404) {
+      throw new Error(`Commit ${commitSha} not found in ${owner}/${repo}`);
+    }
+    throw new Error(`Failed to fetch commit: ${error.message || 'Unknown error'}`);
+  }
+}
+
+/**
+ * Fetch commit hash for a branch
+ */
+export async function fetchBranchCommitHash(
+  owner: string,
+  repo: string,
+  branch: string
+): Promise<string> {
+  try {
+    const { data: ref } = await octokit.rest.git.getRef({
+      owner,
+      repo,
+      ref: `heads/${branch}`,
+    });
+
+    return ref.object.sha;
+  } catch (error: any) {
+    if (error.status === 404) {
+      throw new Error(`Branch '${branch}' not found in ${owner}/${repo}`);
+    }
+    throw new Error(`Failed to fetch branch: ${error.message || 'Unknown error'}`);
+  }
+}
+
+/**
  * Fetch PR files and diff for review (optimized for LLM token usage)
  */
 export async function fetchPRFiles(

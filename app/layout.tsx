@@ -30,11 +30,7 @@ export const metadata: Metadata = {
     description: "Get expert code reviews in seconds. 8 AI judges analyze your GitHub PRs and repositories.",
   },
   icons: {
-    icon: [
-      { url: "/favicon.svg", type: "image/svg+xml" },
-      { url: "/favicon.ico", sizes: "any" },
-    ],
-    apple: "/apple-touch-icon.png",
+    icon: "/icon.svg",
   },
 };
 

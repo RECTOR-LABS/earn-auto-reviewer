@@ -1270,6 +1270,169 @@ export default function Home() {
                 ))}
               </div>
 
+              {/* Full Report Section */}
+              {review.fullReport && (
+                <div className="bg-white rounded-2xl shadow-sm border border-superteam-slate-200 overflow-hidden">
+                  <button
+                    onClick={() => setShowFullReport(!showFullReport)}
+                    className="w-full flex items-center justify-center gap-2 py-4 bg-superteam-slate-50 hover:bg-superteam-slate-100 text-superteam-slate-700 font-medium transition-colors border-b border-superteam-slate-200"
+                  >
+                    {showFullReport ? (
+                      <>
+                        <ChevronUp className="w-4 h-4" />
+                        Hide Full Report
+                      </>
+                    ) : (
+                      <>
+                        <FileCode className="w-4 h-4" />
+                        View Full Report
+                        <Badge className="bg-superteam-purple/10 text-superteam-purple text-xs">Detailed Analysis</Badge>
+                      </>
+                    )}
+                  </button>
+
+                  <AnimatePresence>
+                    {showFullReport && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="p-6 space-y-8">
+                          {/* Detailed Analysis */}
+                          <div>
+                            <h4 className="text-lg font-semibold text-superteam-slate-900 mb-4 flex items-center gap-2">
+                              <Users className="w-5 h-5" /> Detailed Judge Analysis
+                            </h4>
+                            <div className="space-y-4">
+                              {review.fullReport.detailedAnalysis.map((analysis, i) => {
+                                const judgeInfo = JUDGES[analysis.judgeId as JudgeId];
+                                return (
+                                  <div key={i} className="bg-superteam-slate-50 rounded-xl p-5">
+                                    <div className="flex items-center gap-3 mb-3">
+                                      <span className="text-2xl">{judgeInfo?.icon || '🔍'}</span>
+                                      <span className="font-semibold text-superteam-slate-900">{analysis.judgeName}</span>
+                                    </div>
+                                    <p className="text-sm text-superteam-slate-600 leading-relaxed whitespace-pre-wrap">{analysis.analysis}</p>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          {/* File Breakdown */}
+                          {review.fullReport.fileBreakdown.length > 0 && (
+                            <div>
+                              <h4 className="text-lg font-semibold text-superteam-slate-900 mb-4 flex items-center gap-2">
+                                <FileCode className="w-5 h-5" /> File-by-File Breakdown
+                              </h4>
+                              <div className="bg-superteam-slate-50 rounded-xl overflow-hidden">
+                                <table className="w-full text-sm">
+                                  <thead>
+                                    <tr className="border-b border-superteam-slate-200">
+                                      <th className="text-left py-3 px-4 font-medium text-superteam-slate-500">File</th>
+                                      <th className="text-center py-3 px-4 font-medium text-superteam-slate-500">Score</th>
+                                      <th className="text-center py-3 px-4 font-medium text-superteam-slate-500">Status</th>
+                                      <th className="text-right py-3 px-4 font-medium text-superteam-slate-500">Issues</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {review.fullReport.fileBreakdown.map((file, i) => (
+                                      <tr key={i} className="border-b border-superteam-slate-100 last:border-0">
+                                        <td className="py-3 px-4 font-mono text-xs text-superteam-slate-700">{file.file}</td>
+                                        <td className={`py-3 px-4 text-center font-bold ${
+                                          file.score >= 80 ? 'text-green-600' :
+                                          file.score >= 60 ? 'text-yellow-600' : 'text-red-600'
+                                        }`}>{file.score}</td>
+                                        <td className="py-3 px-4 text-center">
+                                          <span className={`text-xs px-2 py-1 rounded-full ${
+                                            file.status === 'good' ? 'bg-green-100 text-green-700' :
+                                            file.status === 'warning' ? 'bg-yellow-100 text-yellow-700' :
+                                            'bg-red-100 text-red-700'
+                                          }`}>{file.status}</span>
+                                        </td>
+                                        <td className="py-3 px-4 text-right text-superteam-slate-500">{file.issues}</td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Recommendations */}
+                          {review.fullReport.recommendations.length > 0 && (
+                            <div>
+                              <h4 className="text-lg font-semibold text-superteam-slate-900 mb-4 flex items-center gap-2">
+                                <AlertOctagon className="w-5 h-5" /> Actionable Recommendations
+                              </h4>
+                              <div className="space-y-3">
+                                {review.fullReport.recommendations.map((rec, i) => (
+                                  <div key={i} className={`flex items-start gap-3 p-4 rounded-xl border ${
+                                    rec.priority === 'high' ? 'bg-red-50 border-red-200' :
+                                    rec.priority === 'medium' ? 'bg-yellow-50 border-yellow-200' :
+                                    'bg-blue-50 border-blue-200'
+                                  }`}>
+                                    <span className={`text-xs font-bold uppercase px-2 py-1 rounded ${
+                                      rec.priority === 'high' ? 'bg-red-100 text-red-700' :
+                                      rec.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                                      'bg-blue-100 text-blue-700'
+                                    }`}>
+                                      {rec.priority}
+                                    </span>
+                                    <div className="flex-1">
+                                      <p className="font-medium text-superteam-slate-900">{rec.title}</p>
+                                      <p className="text-sm text-superteam-slate-600 mt-1">{rec.description}</p>
+                                      <span className={`inline-block mt-2 text-xs px-2 py-0.5 rounded ${
+                                        rec.effort === 'quick' ? 'bg-green-100 text-green-700' :
+                                        rec.effort === 'moderate' ? 'bg-yellow-100 text-yellow-700' :
+                                        'bg-orange-100 text-orange-700'
+                                      }`}>
+                                        Effort: {rec.effort}
+                                      </span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Code Snippets */}
+                          {review.fullReport.codeSnippets.length > 0 && (
+                            <div>
+                              <h4 className="text-lg font-semibold text-superteam-slate-900 mb-4 flex items-center gap-2">
+                                <Code2 className="w-5 h-5" /> Code Suggestions
+                              </h4>
+                              <div className="space-y-4">
+                                {review.fullReport.codeSnippets.map((snippet, i) => (
+                                  <div key={i} className="bg-superteam-slate-900 rounded-xl overflow-hidden">
+                                    <div className="flex items-center justify-between px-4 py-3 bg-superteam-slate-800 border-b border-superteam-slate-700">
+                                      <span className="text-sm font-medium text-white">{snippet.issue}</span>
+                                      <span className="text-xs text-superteam-slate-400 font-mono">{snippet.file}</span>
+                                    </div>
+                                    <div className="p-4 space-y-4">
+                                      <div>
+                                        <span className="text-xs text-red-400 font-medium">// Before</span>
+                                        <pre className="mt-2 text-sm text-red-300 font-mono whitespace-pre-wrap overflow-x-auto">{snippet.before}</pre>
+                                      </div>
+                                      <div>
+                                        <span className="text-xs text-green-400 font-medium">// After (Recommended)</span>
+                                        <pre className="mt-2 text-sm text-green-300 font-mono whitespace-pre-wrap overflow-x-auto">{snippet.after}</pre>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
+
               {/* Metadata */}
               <div className="text-center text-sm text-superteam-slate-500 pt-4 border-t border-superteam-slate-200">
                 Reviewed using {review.metadata.modelUsed?.split('/')[1]} • {review.metadata.judgesUsed.length} judges • {new Date(review.metadata.reviewedAt).toLocaleString()}

@@ -12,6 +12,7 @@
     "@ai-sdk/openai": "^2.0.80",
     "@octokit/rest": "^22.0.1",
     "@radix-ui/react-slot": "^1.2.4",
+    "@types/react-syntax-highlighter": "^15.5.13",
     "ai": "^5.0.108",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -21,6 +22,7 @@
     "openai": "^6.10.0",
     "react": "19.2.1",
     "react-dom": "19.2.1",
+    "react-syntax-highlighter": "^16.1.0",
     "recharts": "^3.5.1",
     "tailwind-merge": "^3.4.0",
     "zod": "^4.1.13"

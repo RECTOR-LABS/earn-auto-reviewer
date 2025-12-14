@@ -343,14 +343,14 @@ export default function Home() {
   const DEMO_VIDEOS = [
     {
       id: 'video1',
-      title: 'Full Review Demo',
-      description: 'Watch our 8-judge AI system analyze a real GitHub repository',
+      title: 'SuperteamDAO PR Review',
+      description: 'Watch our AI analyze a real SuperteamDAO pull request - TLDR scores + Full Report',
       youtubeId: 'h417a4o90Ps',
     },
     {
       id: 'video2',
-      title: 'Full Report Feature',
-      description: 'Deep dive into detailed analysis, file breakdown, and code suggestions',
+      title: 'Tesior Web Review',
+      description: 'Full repository analysis with detailed breakdown and code suggestions',
       youtubeId: 'lFqoYyjXIks',
     },
   ];

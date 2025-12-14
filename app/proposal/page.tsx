@@ -3,6 +3,8 @@
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import {
   ArrowRight,
   Check,
@@ -30,15 +32,15 @@ import { useState } from 'react';
 const DEMO_VIDEOS = [
   {
     id: 'video1',
-    title: 'Full Review Demo',
-    description: 'Watch our 8-judge AI system analyze a real GitHub repository',
+    title: 'SuperteamDAO PR Review',
+    description: 'Watch our AI analyze a real SuperteamDAO pull request - TLDR scores + Full Report',
     youtubeId: 'h417a4o90Ps',
     url: 'https://www.youtube.com/watch?v=h417a4o90Ps',
   },
   {
     id: 'video2',
-    title: 'Full Report Feature',
-    description: 'Deep dive into detailed analysis, file breakdown, and code suggestions',
+    title: 'Tesior Web Review',
+    description: 'Full repository analysis with detailed breakdown and code suggestions',
     youtubeId: 'lFqoYyjXIks',
     url: 'https://www.youtube.com/watch?v=lFqoYyjXIks',
   },
@@ -384,37 +386,122 @@ export default function ProposalPage() {
             <p className="text-superteam-slate-600">How we'll integrate with earn-agent and your infrastructure</p>
           </div>
 
-          <div className="bg-superteam-slate-900 rounded-2xl p-8 text-white overflow-x-auto">
-            <pre className="text-sm font-mono whitespace-pre">
-{`┌─────────────────────────────────────────────────────────────────────────────┐
-│                           EARN-AGENT INTEGRATION                            │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│   ┌──────────────┐    ┌──────────────┐    ┌──────────────┐                  │
-│   │   Sponsor    │    │    Earn      │    │   GitHub     │                  │
-│   │  Dashboard   │◄───│   Frontend   │───►│     API      │                  │
-│   └──────────────┘    └──────────────┘    └──────────────┘                  │
-│          ▲                   │                    │                         │
-│          │                   ▼                    ▼                         │
-│   ┌──────────────┐    ┌──────────────┐    ┌──────────────┐                  │
-│   │    MySQL     │◄───│  earn-agent  │◄───│   Review     │                  │
-│   │   Database   │    │   Service    │    │    API       │                  │
-│   └──────────────┘    └──────────────┘    └──────────────┘                  │
-│          ▲                   │                    │                         │
-│          │                   ▼                    ▼                         │
-│   ┌──────────────┐    ┌──────────────┐    ┌──────────────┐                  │
-│   │    Redis     │◄───│   BullMQ     │───►│  OpenRouter  │                  │
-│   │    Cache     │    │    Queue     │    │   (LLM)      │                  │
-│   └──────────────┘    └──────────────┘    └──────────────┘                  │
-│                              │                                              │
-│                              ▼                                              │
-│                       ┌──────────────┐                                      │
-│                       │  Cron Jobs   │                                      │
-│                       │  (Batch)     │                                      │
-│                       └──────────────┘                                      │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘`}
-            </pre>
+          <div className="bg-superteam-slate-900 rounded-2xl p-6 overflow-x-auto">
+            <svg viewBox="0 0 800 400" className="w-full min-w-[600px]" xmlns="http://www.w3.org/2000/svg">
+              {/* Background grid pattern */}
+              <defs>
+                <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                  <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#334155" strokeWidth="0.5" opacity="0.3"/>
+                </pattern>
+                <linearGradient id="purpleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#8b5cf6"/>
+                  <stop offset="100%" stopColor="#6366f1"/>
+                </linearGradient>
+                <linearGradient id="greenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#22c55e"/>
+                  <stop offset="100%" stopColor="#16a34a"/>
+                </linearGradient>
+                <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#3b82f6"/>
+                  <stop offset="100%" stopColor="#2563eb"/>
+                </linearGradient>
+                <linearGradient id="orangeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#f97316"/>
+                  <stop offset="100%" stopColor="#ea580c"/>
+                </linearGradient>
+              </defs>
+              <rect width="800" height="400" fill="url(#grid)"/>
+
+              {/* Row 1: Sponsor Dashboard, Earn Frontend, GitHub API */}
+              {/* Sponsor Dashboard */}
+              <rect x="40" y="40" width="140" height="60" rx="8" fill="#1e293b" stroke="#475569" strokeWidth="2"/>
+              <text x="110" y="65" textAnchor="middle" fill="#94a3b8" fontSize="11">Sponsor</text>
+              <text x="110" y="82" textAnchor="middle" fill="white" fontSize="13" fontWeight="600">Dashboard</text>
+
+              {/* Earn Frontend */}
+              <rect x="240" y="40" width="140" height="60" rx="8" fill="url(#purpleGrad)"/>
+              <text x="310" y="65" textAnchor="middle" fill="white" opacity="0.8" fontSize="11">Earn</text>
+              <text x="310" y="82" textAnchor="middle" fill="white" fontSize="13" fontWeight="600">Frontend</text>
+
+              {/* GitHub API */}
+              <rect x="440" y="40" width="140" height="60" rx="8" fill="#1e293b" stroke="#475569" strokeWidth="2"/>
+              <text x="510" y="65" textAnchor="middle" fill="#94a3b8" fontSize="11">GitHub</text>
+              <text x="510" y="82" textAnchor="middle" fill="white" fontSize="13" fontWeight="600">API</text>
+
+              {/* Row 2: MySQL, earn-agent, Review API */}
+              {/* MySQL */}
+              <rect x="40" y="140" width="140" height="60" rx="8" fill="url(#blueGrad)"/>
+              <text x="110" y="165" textAnchor="middle" fill="white" opacity="0.8" fontSize="11">MySQL</text>
+              <text x="110" y="182" textAnchor="middle" fill="white" fontSize="13" fontWeight="600">Database</text>
+
+              {/* earn-agent */}
+              <rect x="240" y="140" width="140" height="60" rx="8" fill="url(#greenGrad)"/>
+              <text x="310" y="165" textAnchor="middle" fill="white" opacity="0.8" fontSize="11">earn-agent</text>
+              <text x="310" y="182" textAnchor="middle" fill="white" fontSize="13" fontWeight="600">Service</text>
+
+              {/* Review API */}
+              <rect x="440" y="140" width="140" height="60" rx="8" fill="url(#purpleGrad)"/>
+              <text x="510" y="165" textAnchor="middle" fill="white" opacity="0.8" fontSize="11">Review</text>
+              <text x="510" y="182" textAnchor="middle" fill="white" fontSize="13" fontWeight="600">API (Ours)</text>
+
+              {/* Row 3: Redis, BullMQ, OpenRouter */}
+              {/* Redis */}
+              <rect x="40" y="240" width="140" height="60" rx="8" fill="#1e293b" stroke="#ef4444" strokeWidth="2"/>
+              <text x="110" y="265" textAnchor="middle" fill="#fca5a5" fontSize="11">Redis</text>
+              <text x="110" y="282" textAnchor="middle" fill="white" fontSize="13" fontWeight="600">Cache</text>
+
+              {/* BullMQ */}
+              <rect x="240" y="240" width="140" height="60" rx="8" fill="url(#orangeGrad)"/>
+              <text x="310" y="265" textAnchor="middle" fill="white" opacity="0.8" fontSize="11">BullMQ</text>
+              <text x="310" y="282" textAnchor="middle" fill="white" fontSize="13" fontWeight="600">Queue</text>
+
+              {/* OpenRouter */}
+              <rect x="440" y="240" width="140" height="60" rx="8" fill="#1e293b" stroke="#475569" strokeWidth="2"/>
+              <text x="510" y="265" textAnchor="middle" fill="#94a3b8" fontSize="11">OpenRouter</text>
+              <text x="510" y="282" textAnchor="middle" fill="white" fontSize="13" fontWeight="600">LLM API</text>
+
+              {/* Row 4: Cron Jobs */}
+              <rect x="240" y="340" width="140" height="50" rx="8" fill="#1e293b" stroke="#475569" strokeWidth="2"/>
+              <text x="310" y="362" textAnchor="middle" fill="#94a3b8" fontSize="11">Cron Jobs</text>
+              <text x="310" y="378" textAnchor="middle" fill="white" fontSize="12" fontWeight="600">Batch Process</text>
+
+              {/* Arrows */}
+              {/* Row 1 connections */}
+              <path d="M180 70 L240 70" stroke="#6366f1" strokeWidth="2" fill="none" markerEnd="url(#arrowPurple)"/>
+              <path d="M240 70 L180 70" stroke="#6366f1" strokeWidth="2" fill="none" markerEnd="url(#arrowPurple)"/>
+              <path d="M380 70 L440 70" stroke="#6366f1" strokeWidth="2" fill="none" markerEnd="url(#arrowPurple)"/>
+
+              {/* Vertical connections */}
+              <path d="M110 100 L110 140" stroke="#3b82f6" strokeWidth="2" fill="none"/>
+              <path d="M310 100 L310 140" stroke="#22c55e" strokeWidth="2" fill="none"/>
+              <path d="M510 100 L510 140" stroke="#6366f1" strokeWidth="2" fill="none"/>
+
+              {/* Row 2 connections */}
+              <path d="M180 170 L240 170" stroke="#22c55e" strokeWidth="2" fill="none"/>
+              <path d="M380 170 L440 170" stroke="#6366f1" strokeWidth="2" fill="none"/>
+
+              {/* Vertical to row 3 */}
+              <path d="M110 200 L110 240" stroke="#ef4444" strokeWidth="2" fill="none"/>
+              <path d="M310 200 L310 240" stroke="#f97316" strokeWidth="2" fill="none"/>
+              <path d="M510 200 L510 240" stroke="#6366f1" strokeWidth="2" fill="none"/>
+
+              {/* Row 3 connections */}
+              <path d="M180 270 L240 270" stroke="#f97316" strokeWidth="2" fill="none"/>
+              <path d="M380 270 L440 270" stroke="#6366f1" strokeWidth="2" fill="none"/>
+
+              {/* To Cron */}
+              <path d="M310 300 L310 340" stroke="#f97316" strokeWidth="2" fill="none"/>
+
+              {/* Labels on right */}
+              <rect x="620" y="60" width="160" height="30" rx="4" fill="#1e293b"/>
+              <text x="700" y="80" textAnchor="middle" fill="#94a3b8" fontSize="11">User Submission Flow</text>
+
+              <rect x="620" y="160" width="160" height="30" rx="4" fill="#1e293b"/>
+              <text x="700" y="180" textAnchor="middle" fill="#94a3b8" fontSize="11">Processing Layer</text>
+
+              <rect x="620" y="260" width="160" height="30" rx="4" fill="#1e293b"/>
+              <text x="700" y="280" textAnchor="middle" fill="#94a3b8" fontSize="11">Infrastructure</text>
+            </svg>
           </div>
 
           {/* Integration Details */}
@@ -424,7 +511,11 @@ export default function ProposalPage() {
                 <Database className="w-6 h-6 text-superteam-purple" />
                 <h3 className="font-semibold text-superteam-slate-900">MySQL Schema</h3>
               </div>
-              <pre className="text-xs bg-superteam-slate-50 p-4 rounded-lg overflow-x-auto">
+              <SyntaxHighlighter
+                language="sql"
+                style={oneDark}
+                customStyle={{ fontSize: '12px', borderRadius: '8px', margin: 0 }}
+              >
 {`CREATE TABLE github_reviews (
   id INT PRIMARY KEY AUTO_INCREMENT,
   submission_id VARCHAR(255) NOT NULL,
@@ -441,7 +532,7 @@ export default function ProposalPage() {
   INDEX idx_submission (submission_id),
   INDEX idx_score (overall_score)
 );`}
-              </pre>
+              </SyntaxHighlighter>
             </div>
 
             <div className="bg-white rounded-xl border border-superteam-slate-200 p-6">
@@ -449,7 +540,11 @@ export default function ProposalPage() {
                 <Server className="w-6 h-6 text-superteam-purple" />
                 <h3 className="font-semibold text-superteam-slate-900">BullMQ Worker</h3>
               </div>
-              <pre className="text-xs bg-superteam-slate-50 p-4 rounded-lg overflow-x-auto">
+              <SyntaxHighlighter
+                language="typescript"
+                style={oneDark}
+                customStyle={{ fontSize: '12px', borderRadius: '8px', margin: 0 }}
+              >
 {`// review.worker.ts
 const reviewWorker = new Worker(
   'github-reviews',
@@ -473,7 +568,7 @@ const reviewWorker = new Worker(
   },
   { connection: redis }
 );`}
-              </pre>
+              </SyntaxHighlighter>
             </div>
 
             <div className="bg-white rounded-xl border border-superteam-slate-200 p-6">
@@ -481,7 +576,11 @@ const reviewWorker = new Worker(
                 <Clock className="w-6 h-6 text-superteam-purple" />
                 <h3 className="font-semibold text-superteam-slate-900">Cron Jobs</h3>
               </div>
-              <pre className="text-xs bg-superteam-slate-50 p-4 rounded-lg overflow-x-auto">
+              <SyntaxHighlighter
+                language="typescript"
+                style={oneDark}
+                customStyle={{ fontSize: '12px', borderRadius: '8px', margin: 0 }}
+              >
 {`// cron/batch-review.ts
 // Run every hour - process pending submissions
 cron.schedule('0 * * * *', async () => {
@@ -498,7 +597,7 @@ cron.schedule('0 * * * *', async () => {
     });
   }
 });`}
-              </pre>
+              </SyntaxHighlighter>
             </div>
 
             <div className="bg-white rounded-xl border border-superteam-slate-200 p-6">
@@ -506,7 +605,11 @@ cron.schedule('0 * * * *', async () => {
                 <Plug className="w-6 h-6 text-superteam-purple" />
                 <h3 className="font-semibold text-superteam-slate-900">Event Integration</h3>
               </div>
-              <pre className="text-xs bg-superteam-slate-50 p-4 rounded-lg overflow-x-auto">
+              <SyntaxHighlighter
+                language="typescript"
+                style={oneDark}
+                customStyle={{ fontSize: '12px', borderRadius: '8px', margin: 0 }}
+              >
 {`// events/submission.handler.ts
 export async function onSubmissionCreated(
   submission: Submission
@@ -524,7 +627,7 @@ export async function onSubmissionCreated(
   // Emit event for dashboard
   emit('review:queued', submission.id);
 }`}
-              </pre>
+              </SyntaxHighlighter>
             </div>
           </div>
         </motion.section>
@@ -686,7 +789,7 @@ export async function onSubmissionCreated(
                 </Button>
               </Link>
               <a href="https://github.com/RECTOR-LABS/earn-auto-reviewer" target="_blank">
-                <Button variant="outline" className="border-white/30 text-white hover:bg-white/10">
+                <Button variant="outline" className="border-2 border-white text-white hover:bg-white hover:text-superteam-purple">
                   <Github className="w-4 h-4 mr-2" />
                   View Repository
                 </Button>

@@ -43,7 +43,6 @@ import {
   Clock,
   TrendingUp,
   Plug,
-  X,
   FileCode,
   AlertOctagon,
   ChevronUp,
@@ -390,8 +389,8 @@ export default function Home() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Review failed');
       setReview(data);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setIsLoading(false);
     }
@@ -736,7 +735,7 @@ export default function Home() {
                         Built for Superteam Earn
                       </Badge>
                       <h3 className="text-xl md:text-2xl font-bold text-superteam-slate-900">
-                        Manual PR reviews don't scale.
+                        Manual PR reviews don&apos;t scale.
                       </h3>
                       <p className="text-superteam-slate-600 mt-2 max-w-2xl mx-auto">
                         Superteam Earn processes hundreds of GitHub submissions. Sponsors need fast, consistent, expert-level analysis.
@@ -775,7 +774,7 @@ export default function Home() {
 
                     <div className="text-center">
                       <p className="text-sm text-superteam-slate-600 italic">
-                        "This isn't a proposal. It's a working demo. Try it above. See the results."
+                        &quot;This isn&apos;t a proposal. It&apos;s a working demo. Try it above. See the results.&quot;
                       </p>
                     </div>
                   </div>

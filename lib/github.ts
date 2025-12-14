@@ -137,19 +137,20 @@ export async function fetchPullRequest(
       isDraft: pr.draft || false,
       createdAt: pr.created_at,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Handle common errors
-    if (error.status === 404) {
+    const err = error as { status?: number; message?: string };
+    if (err.status === 404) {
       throw new Error(`Pull request #${prNumber} not found in ${owner}/${repo}`);
     }
-    if (error.status === 403) {
+    if (err.status === 403) {
       throw new Error(`Access denied to ${owner}/${repo}. Repository may be private.`);
     }
-    if (error.status === 401) {
+    if (err.status === 401) {
       throw new Error('GitHub authentication failed. Check GITHUB_TOKEN.');
     }
 
-    throw new Error(`Failed to fetch PR: ${error.message || 'Unknown error'}`);
+    throw new Error(`Failed to fetch PR: ${err.message || 'Unknown error'}`);
   }
 }
 
@@ -224,19 +225,20 @@ export async function fetchRepository(
       hasTests,
       readmeContent,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Handle common errors
-    if (error.status === 404) {
+    const err = error as { status?: number; message?: string };
+    if (err.status === 404) {
       throw new Error(`Repository ${owner}/${repo} not found`);
     }
-    if (error.status === 403) {
+    if (err.status === 403) {
       throw new Error(`Access denied to ${owner}/${repo}. Repository may be private.`);
     }
-    if (error.status === 401) {
+    if (err.status === 401) {
       throw new Error('GitHub authentication failed. Check GITHUB_TOKEN.');
     }
 
-    throw new Error(`Failed to fetch repository: ${error.message || 'Unknown error'}`);
+    throw new Error(`Failed to fetch repository: ${err.message || 'Unknown error'}`);
   }
 }
 
@@ -256,11 +258,12 @@ export async function fetchPRCommitHash(
     });
 
     return pr.head.sha;
-  } catch (error: any) {
-    if (error.status === 404) {
+  } catch (error: unknown) {
+    const err = error as { status?: number; message?: string };
+    if (err.status === 404) {
       throw new Error(`Pull request #${prNumber} not found in ${owner}/${repo}`);
     }
-    throw new Error(`Failed to fetch PR commit hash: ${error.message || 'Unknown error'}`);
+    throw new Error(`Failed to fetch PR commit hash: ${err.message || 'Unknown error'}`);
   }
 }
 
@@ -291,15 +294,16 @@ export async function fetchRepoCommitHash(
     }
 
     return commits[0].sha;
-  } catch (error: any) {
-    if (error.status === 404) {
+  } catch (error: unknown) {
+    const err = error as { status?: number; message?: string };
+    if (err.status === 404) {
       throw new Error(`Repository ${owner}/${repo} not found`);
     }
-    if (error.status === 409) {
+    if (err.status === 409) {
       // Empty repository
       throw new Error('Repository is empty (no commits)');
     }
-    throw new Error(`Failed to fetch repo commit hash: ${error.message || 'Unknown error'}`);
+    throw new Error(`Failed to fetch repo commit hash: ${err.message || 'Unknown error'}`);
   }
 }
 
@@ -320,11 +324,12 @@ export async function fetchCommitHash(
     });
 
     return commit.sha;
-  } catch (error: any) {
-    if (error.status === 404) {
+  } catch (error: unknown) {
+    const err = error as { status?: number; message?: string };
+    if (err.status === 404) {
       throw new Error(`Commit ${commitSha} not found in ${owner}/${repo}`);
     }
-    throw new Error(`Failed to fetch commit: ${error.message || 'Unknown error'}`);
+    throw new Error(`Failed to fetch commit: ${err.message || 'Unknown error'}`);
   }
 }
 
@@ -344,11 +349,12 @@ export async function fetchBranchCommitHash(
     });
 
     return ref.object.sha;
-  } catch (error: any) {
-    if (error.status === 404) {
+  } catch (error: unknown) {
+    const err = error as { status?: number; message?: string };
+    if (err.status === 404) {
       throw new Error(`Branch '${branch}' not found in ${owner}/${repo}`);
     }
-    throw new Error(`Failed to fetch branch: ${error.message || 'Unknown error'}`);
+    throw new Error(`Failed to fetch branch: ${err.message || 'Unknown error'}`);
   }
 }
 
@@ -405,7 +411,8 @@ export async function fetchPRFiles(
     }
 
     return diff || 'No file changes available.';
-  } catch (error: any) {
-    throw new Error(`Failed to fetch PR files: ${error.message || 'Unknown error'}`);
+  } catch (error: unknown) {
+    const err = error as { message?: string };
+    throw new Error(`Failed to fetch PR files: ${err.message || 'Unknown error'}`);
   }
 }

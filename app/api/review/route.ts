@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { parseGitHubUrl } from '@/lib/github';
 import { getReview } from '@/lib/review-service';
 import { JudgeId, PANEL_PRESETS, JUDGES, ModelId, MODELS, DEFAULT_MODEL, MODEL_ORDER } from '@/types';
@@ -9,18 +10,29 @@ const VALID_JUDGES = Object.keys(JUDGES) as JudgeId[];
 // Valid model IDs
 const VALID_MODELS = Object.keys(MODELS) as ModelId[];
 
+// Zod schema for request validation
+const ReviewRequestSchema = z.object({
+  url: z.string().min(1, 'GitHub URL is required').url('Invalid URL format'),
+  judges: z.array(z.string()).optional(),
+  preset: z.enum(['quick', 'standard', 'comprehensive', 'custom']).optional(),
+  model: z.string().optional(),
+});
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { url, judges: requestedJudges, preset, model: requestedModel } = body;
 
-    // Validate URL
-    if (!url || typeof url !== 'string') {
+    // Validate request body with Zod
+    const validation = ReviewRequestSchema.safeParse(body);
+    if (!validation.success) {
+      const errorMessage = validation.error.issues[0]?.message || 'Invalid request body';
       return NextResponse.json(
-        { error: 'GitHub URL is required', code: 'MISSING_URL' },
+        { error: errorMessage, code: 'VALIDATION_ERROR' },
         { status: 400 }
       );
     }
+
+    const { url, judges: requestedJudges, preset, model: requestedModel } = validation.data;
 
     // Parse GitHub URL
     const parsed = parseGitHubUrl(url);
@@ -79,8 +91,8 @@ export async function POST(request: NextRequest) {
         },
         { status: 200 }
       );
-    } catch (error: any) {
-      const errorMessage = error.message || 'Unknown error';
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
       // GitHub errors
       if (errorMessage.includes('not found')) {
@@ -128,10 +140,11 @@ export async function POST(request: NextRequest) {
 
       throw error;
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[API] Review error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Internal error';
     return NextResponse.json(
-      { error: error.message || 'Internal error', code: 'INTERNAL_ERROR' },
+      { error: errorMessage, code: 'INTERNAL_ERROR' },
       { status: 500 }
     );
   }

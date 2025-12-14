@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import {
-  ArrowRight,
   Check,
   CheckCircle,
   ChevronRight,
@@ -19,7 +18,6 @@ import {
   Layers,
   Play,
   Plug,
-  RefreshCw,
   Server,
   Sparkles,
   Target,
@@ -146,11 +144,11 @@ export default function ProposalPage() {
             </span>
           </h1>
           <p className="text-xl text-superteam-slate-600 max-w-2xl mx-auto mb-4">
-            We didn't just propose an idea — we built a working demo. 8 AI judges, detailed analysis, and production-ready code.
+            We didn&apos;t just propose an idea — we built a working demo. 8 AI judges, detailed analysis, and production-ready code.
           </p>
           <p className="text-2xl md:text-3xl font-bold text-superteam-slate-900 mb-8">
             <span className="bg-gradient-to-r from-superteam-purple to-superteam-purple-dark bg-clip-text text-transparent">
-              "I don't submit words. I submit works."
+              &quot;I don&apos;t submit words. I submit works.&quot;
             </span>
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
@@ -383,7 +381,7 @@ export default function ProposalPage() {
         >
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-superteam-slate-900 mb-2">Integration Architecture</h2>
-            <p className="text-superteam-slate-600">How we'll integrate with earn-agent and your infrastructure</p>
+            <p className="text-superteam-slate-600">How we&apos;ll integrate with earn-agent and your infrastructure</p>
           </div>
 
           <div className="bg-superteam-slate-900 rounded-2xl p-6 overflow-x-auto">
@@ -743,7 +741,7 @@ export async function onSubmissionCreated(
               {
                 icon: Target,
                 title: 'We Understand the Problem',
-                desc: 'Analyzed Superteam Earn\'s submission flow. Built for actual use cases.',
+                desc: "Analyzed Superteam Earn's submission flow. Built for actual use cases.",
               },
               {
                 icon: Layers,
@@ -752,7 +750,7 @@ export async function onSubmissionCreated(
               },
               {
                 icon: Code2,
-                title: 'We\'re Technical',
+                title: "We're Technical",
                 desc: 'Senior-level engineering. Clean architecture. Comprehensive error handling.',
               },
             ].map((item) => (
@@ -779,7 +777,7 @@ export async function onSubmissionCreated(
           <div className="bg-gradient-to-r from-superteam-purple to-superteam-purple-dark rounded-2xl p-8 text-white">
             <h2 className="text-2xl font-bold mb-4">Ready to Build the Future of Bounty Reviews</h2>
             <p className="text-white/80 mb-6 max-w-xl mx-auto">
-              We didn't just apply — we shipped. Try our demo, review our code, and let's discuss how we can integrate this into Superteam Earn.
+              We didn&apos;t just apply — we shipped. Try our demo, review our code, and let&apos;s discuss how we can integrate this into Superteam Earn.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-4">
               <Link href="/">

@@ -4,6 +4,21 @@ import { parseGitHubUrl } from '@/lib/github';
 import { getReview } from '@/lib/review-service';
 import { JudgeId, PANEL_PRESETS, JUDGES, ModelId, MODELS, DEFAULT_MODEL, MODEL_ORDER } from '@/types';
 import { logger } from '@/lib/logger';
+import { checkRateLimit, getRateLimitHeaders } from '@/lib/rate-limit';
+
+// CORS configuration
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': process.env.ALLOWED_ORIGIN || '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Max-Age': '86400',
+};
+
+function getClientIP(request: NextRequest): string {
+  const forwarded = request.headers.get('x-forwarded-for');
+  const realIP = request.headers.get('x-real-ip');
+  return forwarded?.split(',')[0]?.trim() || realIP || 'unknown';
+}
 
 // Valid judge IDs
 const VALID_JUDGES = Object.keys(JUDGES) as JudgeId[];
@@ -19,7 +34,37 @@ const ReviewRequestSchema = z.object({
   model: z.string().optional(),
 });
 
+// Handle CORS preflight
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: CORS_HEADERS,
+  });
+}
+
 export async function POST(request: NextRequest) {
+  // Rate limiting
+  const clientIP = getClientIP(request);
+  const rateLimit = checkRateLimit(clientIP);
+
+  if (!rateLimit.success) {
+    return NextResponse.json(
+      {
+        error: 'Too many requests. Please try again later.',
+        code: 'RATE_LIMITED',
+        retryAfter: rateLimit.reset - Math.floor(Date.now() / 1000),
+      },
+      {
+        status: 429,
+        headers: {
+          ...CORS_HEADERS,
+          ...getRateLimitHeaders(rateLimit),
+          'Retry-After': (rateLimit.reset - Math.floor(Date.now() / 1000)).toString(),
+        },
+      }
+    );
+  }
+
   try {
     const body = await request.json();
 
@@ -88,7 +133,13 @@ export async function POST(request: NextRequest) {
             }),
           },
         },
-        { status: 200 }
+        {
+          status: 200,
+          headers: {
+            ...CORS_HEADERS,
+            ...getRateLimitHeaders(rateLimit),
+          },
+        }
       );
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';

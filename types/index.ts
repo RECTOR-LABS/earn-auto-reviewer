@@ -196,11 +196,12 @@ export const JUDGES: Record<JudgeId, JudgeInfo> = {
 // ============================================
 
 export type ModelId =
+  | 'anthropic/claude-haiku-4.5'
   | 'anthropic/claude-3.5-haiku'
   | 'google/gemini-2.5-flash'
   | 'openai/gpt-4o'
   | 'anthropic/claude-sonnet-4.5'
-  | 'anthropic/claude-opus-4'
+  | 'anthropic/claude-opus-4.5'
   | 'google/gemini-2.5-pro';
 
 export type CostTier = '$' | '$$' | '$$$' | '$$$$';
@@ -217,14 +218,25 @@ export interface ModelInfo {
   contextWindow: string;
 }
 
-export const DEFAULT_MODEL: ModelId = 'anthropic/claude-3.5-haiku';
+export const DEFAULT_MODEL: ModelId = 'anthropic/claude-haiku-4.5';
 
 export const MODELS: Record<ModelId, ModelInfo> = {
+  'anthropic/claude-haiku-4.5': {
+    id: 'anthropic/claude-haiku-4.5',
+    name: 'Claude Haiku 4.5',
+    provider: 'Anthropic',
+    description: 'Latest Haiku - fast & smart (Recommended)',
+    costTier: '$',
+    inputCost: '$1/M',
+    outputCost: '$5/M',
+    speed: 'Fast',
+    contextWindow: '200K',
+  },
   'anthropic/claude-3.5-haiku': {
     id: 'anthropic/claude-3.5-haiku',
     name: 'Claude 3.5 Haiku',
     provider: 'Anthropic',
-    description: 'Fast & affordable - perfect for most reviews',
+    description: 'Previous gen - slightly cheaper',
     costTier: '$',
     inputCost: '$0.80/M',
     outputCost: '$4/M',
@@ -264,14 +276,14 @@ export const MODELS: Record<ModelId, ModelInfo> = {
     speed: 'Medium',
     contextWindow: '200K',
   },
-  'anthropic/claude-opus-4': {
-    id: 'anthropic/claude-opus-4',
-    name: 'Claude Opus 4',
+  'anthropic/claude-opus-4.5': {
+    id: 'anthropic/claude-opus-4.5',
+    name: 'Claude Opus 4.5',
     provider: 'Anthropic',
     description: 'Most capable - deep analysis',
-    costTier: '$$$$',
-    inputCost: '$15/M',
-    outputCost: '$75/M',
+    costTier: '$$$',
+    inputCost: '$5/M',
+    outputCost: '$25/M',
     speed: 'Slow',
     contextWindow: '200K',
   },
@@ -288,14 +300,15 @@ export const MODELS: Record<ModelId, ModelInfo> = {
   },
 };
 
-// Model list ordered by cost (for UI dropdown)
+// Model list ordered for UI (recommended first, then by cost)
 export const MODEL_ORDER: ModelId[] = [
-  'anthropic/claude-3.5-haiku',
+  'anthropic/claude-haiku-4.5',
   'google/gemini-2.5-flash',
+  'anthropic/claude-3.5-haiku',
   'openai/gpt-4o',
   'anthropic/claude-sonnet-4.5',
   'google/gemini-2.5-pro',
-  'anthropic/claude-opus-4',
+  'anthropic/claude-opus-4.5',
 ];
 
 // ============================================

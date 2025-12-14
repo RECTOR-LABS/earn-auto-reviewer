@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AnimatedScore, JudgeCardPro } from '@/components/pro';
+import { ErrorBoundary } from '@/components/error-boundary';
 import {
   ReviewResult,
   JudgeId,
@@ -453,8 +454,9 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white via-superteam-purple-50/30 to-white">
-      {/* Header */}
+    <ErrorBoundary>
+      <div className="min-h-screen bg-gradient-to-b from-white via-superteam-purple-50/30 to-white">
+        {/* Header */}
       <header className="bg-white/80 backdrop-blur-sm border-b border-superteam-slate-200/50 sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 max-w-5xl">
           <div className="flex items-center justify-between">
@@ -1529,13 +1531,14 @@ export default function Home() {
         </div>
       </footer>
 
-      {/* Click outside to close dropdown */}
-      {showModelDropdown && (
-        <div
-          className="fixed inset-0 z-40"
-          onClick={() => setShowModelDropdown(false)}
-        />
-      )}
-    </div>
+        {/* Click outside to close dropdown */}
+        {showModelDropdown && (
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setShowModelDropdown(false)}
+          />
+        )}
+      </div>
+    </ErrorBoundary>
   );
 }

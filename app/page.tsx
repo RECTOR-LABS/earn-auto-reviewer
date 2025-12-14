@@ -31,8 +31,6 @@ import {
   Search,
   Bot,
   BarChart3,
-  Shield,
-  Gauge,
   Code2,
   TestTube,
   Lightbulb,
@@ -42,6 +40,13 @@ import {
   CheckCircle,
   AlertTriangle,
   XCircle,
+  Clock,
+  TrendingUp,
+  Plug,
+  X,
+  FileCode,
+  AlertOctagon,
+  ChevronUp,
 } from 'lucide-react';
 
 const EXAMPLE_URLS = [
@@ -87,6 +92,62 @@ const EXAMPLE_REVIEWS = [
       { type: 'warning', text: 'Consider adding fuzz tests for edge cases' },
       { type: 'info', text: 'Could add events for off-chain indexing' },
     ],
+    // Full report data
+    fullReport: {
+      detailedAnalysis: [
+        {
+          icon: '🏗️',
+          name: 'Code Architect',
+          score: 88,
+          analysis: 'The Anchor program demonstrates excellent separation of concerns with well-defined account structures. The use of PDAs for token vaults follows best practices and ensures deterministic address derivation. The instruction handlers are clean and focused, each handling a single responsibility. Consider extracting the swap calculation logic into a separate module for better testability and potential reuse.',
+        },
+        {
+          icon: '🔒',
+          name: 'Security Sentinel',
+          score: 82,
+          analysis: 'Proper signer validation is implemented across all instructions. The program correctly validates account ownership and uses Anchor\'s account constraints effectively. However, there\'s a potential front-running vulnerability in the swap function - consider implementing slippage protection with a maximum price impact parameter.',
+        },
+        {
+          icon: '⚡',
+          name: 'Perf Optimizer',
+          score: 91,
+          analysis: 'Efficient PDA derivation with cached bump seeds. The program minimizes CPI calls and uses zero-copy deserialization where appropriate. Token transfers are batched efficiently. One optimization opportunity: consider using remaining_accounts for dynamic token pair support instead of hardcoded accounts.',
+        },
+        {
+          icon: '🧪',
+          name: 'Testing Champion',
+          score: 78,
+          analysis: 'Good test coverage for happy paths with Bankrun integration tests. Unit tests cover core calculation logic. However, edge cases are underrepresented - add tests for: zero amounts, maximum u64 values, same token swaps, and insufficient liquidity scenarios. Consider adding fuzz tests using Trident or similar framework.',
+        },
+      ],
+      fileBreakdown: [
+        { file: 'programs/swap/src/lib.rs', score: 92, status: 'excellent', lines: 245 },
+        { file: 'programs/swap/src/state.rs', score: 85, status: 'good', lines: 67 },
+        { file: 'programs/swap/src/errors.rs', score: 90, status: 'excellent', lines: 32 },
+        { file: 'tests/swap.ts', score: 70, status: 'needs-work', lines: 189 },
+        { file: 'programs/swap/src/instructions/mod.rs', score: 88, status: 'good', lines: 156 },
+      ],
+      recommendations: [
+        { priority: 'high', text: 'Add slippage protection parameter to swap instruction', category: 'Security' },
+        { priority: 'high', text: 'Implement fuzz testing for edge cases', category: 'Testing' },
+        { priority: 'medium', text: 'Add events for off-chain indexing (swap, deposit, withdraw)', category: 'Integration' },
+        { priority: 'medium', text: 'Consider using remaining_accounts for flexible token pairs', category: 'Architecture' },
+        { priority: 'low', text: 'Add inline documentation for complex calculation logic', category: 'Documentation' },
+      ],
+      codeSnippets: [
+        {
+          title: 'Slippage Protection (Recommended)',
+          file: 'programs/swap/src/instructions/swap.rs',
+          line: 42,
+          before: 'let output_amount = calculate_swap(input_amount, pool_state);',
+          after: `let output_amount = calculate_swap(input_amount, pool_state);
+require!(
+    output_amount >= min_output_amount,
+    SwapError::SlippageExceeded
+);`,
+        },
+      ],
+    },
   },
   {
     id: 'react',
@@ -110,6 +171,59 @@ const EXAMPLE_REVIEWS = [
       { type: 'warning', text: 'README lacks setup instructions and examples' },
       { type: 'info', text: 'Consider React Query for data fetching' },
     ],
+    fullReport: {
+      detailedAnalysis: [
+        {
+          icon: '🏗️',
+          name: 'Code Architect',
+          score: 75,
+          analysis: 'The component structure follows a reasonable atomic design pattern with atoms, molecules, and organisms. However, there\'s inconsistent use of custom hooks - some components have inline data fetching while others use hooks. Standardize on a single approach. The state management using Context is appropriate for this scale but consider Zustand if it grows.',
+        },
+        {
+          icon: '🎨',
+          name: 'UX/DX Advocate',
+          score: 80,
+          analysis: 'Clean, modern UI with consistent spacing and typography. Good use of semantic HTML and ARIA labels. The dashboard is responsive down to tablet sizes but needs work on mobile. Loading states are handled well with skeleton components. Consider adding keyboard navigation for the data tables.',
+        },
+        {
+          icon: '🧪',
+          name: 'Testing Champion',
+          score: 58,
+          analysis: 'No unit tests found in the repository. This is a significant gap for a production application. At minimum, add tests for: utility functions, custom hooks, and critical user flows. Consider using React Testing Library for component tests and MSW for API mocking.',
+        },
+        {
+          icon: '📚',
+          name: 'Docs Guru',
+          score: 72,
+          analysis: 'README exists but lacks practical information. Missing: installation steps, environment variable documentation, architecture overview, and contribution guidelines. The inline code comments are sparse - complex components would benefit from JSDoc annotations.',
+        },
+      ],
+      fileBreakdown: [
+        { file: 'src/components/Dashboard.tsx', score: 78, status: 'good', lines: 312 },
+        { file: 'src/hooks/useWalletData.ts', score: 82, status: 'good', lines: 89 },
+        { file: 'src/components/Charts/PortfolioChart.tsx', score: 75, status: 'good', lines: 156 },
+        { file: 'src/utils/formatters.ts', score: 85, status: 'good', lines: 45 },
+        { file: 'src/App.tsx', score: 70, status: 'needs-work', lines: 67 },
+      ],
+      recommendations: [
+        { priority: 'high', text: 'Add unit tests with React Testing Library', category: 'Testing' },
+        { priority: 'high', text: 'Document environment variables and setup steps', category: 'Documentation' },
+        { priority: 'medium', text: 'Implement error boundaries for graceful failure', category: 'Reliability' },
+        { priority: 'medium', text: 'Add mobile-responsive styles for <768px', category: 'UX' },
+        { priority: 'low', text: 'Consider React Query for caching and refetching', category: 'Performance' },
+      ],
+      codeSnippets: [
+        {
+          title: 'Add Error Boundary (Recommended)',
+          file: 'src/App.tsx',
+          line: 15,
+          before: '<Dashboard />',
+          after: `<ErrorBoundary fallback={<ErrorFallback />}>
+  <Dashboard />
+</ErrorBoundary>`,
+        },
+      ],
+    },
   },
   {
     id: 'python',
@@ -133,6 +247,66 @@ const EXAMPLE_REVIEWS = [
       { type: 'warning', text: 'No tests - add pytest coverage' },
       { type: 'warning', text: 'Add .env support for sensitive credentials' },
     ],
+    fullReport: {
+      detailedAnalysis: [
+        {
+          icon: '🔒',
+          name: 'Security Sentinel',
+          score: 45,
+          analysis: 'CRITICAL SECURITY ISSUE: API keys for Helius and Birdeye are hardcoded in config.py (lines 12-15). These credentials are now exposed in git history. Immediate action required: rotate these keys, add them to .gitignore, and use environment variables or a secrets manager. Additionally, the HTTP requests don\'t validate SSL certificates in development mode.',
+        },
+        {
+          icon: '🏗️',
+          name: 'Code Architect',
+          score: 62,
+          analysis: 'The code structure is flat with most logic in a single tracker.py file (~450 lines). Functions like fetch_and_process() are doing too much - fetching, parsing, calculating, and printing. Apply single responsibility principle. Consider a class-based approach or at least separate modules for API clients, data processing, and CLI output.',
+        },
+        {
+          icon: '🧪',
+          name: 'Testing Champion',
+          score: 52,
+          analysis: 'No test files found. For a CLI tool that handles financial data, this is risky. Add pytest with fixtures for: API response mocking, calculation accuracy, edge cases (empty wallets, API errors). The current code structure makes testing difficult - another reason to refactor into smaller, testable units.',
+        },
+        {
+          icon: '📚',
+          name: 'Docs Guru',
+          score: 68,
+          analysis: 'Basic README with installation steps exists. Missing: usage examples, CLI argument documentation, expected output format, and error handling guide. The code has minimal inline comments - the complex price calculation logic in lines 234-267 is particularly opaque.',
+        },
+      ],
+      fileBreakdown: [
+        { file: 'tracker.py', score: 55, status: 'needs-work', lines: 456 },
+        { file: 'config.py', score: 30, status: 'critical', lines: 28 },
+        { file: 'utils.py', score: 65, status: 'needs-work', lines: 89 },
+        { file: 'README.md', score: 70, status: 'needs-work', lines: 45 },
+      ],
+      recommendations: [
+        { priority: 'critical', text: 'IMMEDIATELY rotate exposed API keys and use .env', category: 'Security' },
+        { priority: 'high', text: 'Refactor tracker.py into smaller modules', category: 'Architecture' },
+        { priority: 'high', text: 'Add pytest test suite with mocked API responses', category: 'Testing' },
+        { priority: 'medium', text: 'Add type hints throughout the codebase', category: 'Code Quality' },
+        { priority: 'medium', text: 'Implement proper error handling with custom exceptions', category: 'Reliability' },
+      ],
+      codeSnippets: [
+        {
+          title: 'Fix Hardcoded Credentials (CRITICAL)',
+          file: 'config.py',
+          line: 12,
+          before: `HELIUS_API_KEY = "abc123-your-key-here"
+BIRDEYE_API_KEY = "xyz789-another-key"`,
+          after: `import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+HELIUS_API_KEY = os.getenv("HELIUS_API_KEY")
+BIRDEYE_API_KEY = os.getenv("BIRDEYE_API_KEY")
+
+if not HELIUS_API_KEY or not BIRDEYE_API_KEY:
+    raise ValueError("Missing required API keys in environment")`,
+        },
+      ],
+    },
   },
 ];
 
@@ -160,6 +334,7 @@ export default function Home() {
   const [showModelDropdown, setShowModelDropdown] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [selectedExample, setSelectedExample] = useState(0);
+  const [showFullReport, setShowFullReport] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const getSelectedJudges = (): JudgeId[] => {
@@ -238,6 +413,25 @@ export default function Home() {
       case 'warning': return <AlertTriangle className="w-4 h-4 text-yellow-500" />;
       case 'error': return <XCircle className="w-4 h-4 text-red-500" />;
       default: return <Lightbulb className="w-4 h-4 text-blue-500" />;
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'critical': return 'bg-red-100 text-red-700 border-red-200';
+      case 'high': return 'bg-orange-100 text-orange-700 border-orange-200';
+      case 'medium': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+      default: return 'bg-blue-100 text-blue-700 border-blue-200';
+    }
+  };
+
+  const getFileStatusColor = (status: string) => {
+    switch (status) {
+      case 'excellent': return 'text-green-600';
+      case 'good': return 'text-blue-600';
+      case 'needs-work': return 'text-yellow-600';
+      case 'critical': return 'text-red-600';
+      default: return 'text-superteam-slate-600';
     }
   };
 
@@ -508,13 +702,76 @@ export default function Home() {
               </motion.div>
 
               {/* ═══════════════════════════════════════════════════════════════ */}
+              {/* BUILT FOR SUPERTEAM EARN BANNER */}
+              {/* ═══════════════════════════════════════════════════════════════ */}
+              <motion.section
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="pt-8"
+              >
+                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-superteam-purple-50 via-white to-superteam-purple-50 border border-superteam-purple-100">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-superteam-purple-100/50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+                  <div className="relative px-6 py-8 md:px-10">
+                    <div className="text-center mb-6">
+                      <Badge className="bg-superteam-purple/10 text-superteam-purple border-superteam-purple/20 mb-3">
+                        Built for Superteam Earn
+                      </Badge>
+                      <h3 className="text-xl md:text-2xl font-bold text-superteam-slate-900">
+                        Manual PR reviews don't scale.
+                      </h3>
+                      <p className="text-superteam-slate-600 mt-2 max-w-2xl mx-auto">
+                        Superteam Earn processes hundreds of GitHub submissions. Sponsors need fast, consistent, expert-level analysis.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                      <div className="flex items-center gap-3 bg-white/80 rounded-xl p-4 border border-superteam-slate-200/50">
+                        <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
+                          <Clock className="w-5 h-5 text-red-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-superteam-slate-900">The Problem</p>
+                          <p className="text-xs text-superteam-slate-500">Manual reviews: 15-30 min each</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 bg-white/80 rounded-xl p-4 border border-superteam-slate-200/50">
+                        <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+                          <TrendingUp className="w-5 h-5 text-green-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-superteam-slate-900">The Solution</p>
+                          <p className="text-xs text-superteam-slate-500">8 AI experts in &lt;30 seconds</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 bg-white/80 rounded-xl p-4 border border-superteam-slate-200/50">
+                        <div className="w-10 h-10 rounded-lg bg-superteam-purple-100 flex items-center justify-center">
+                          <Plug className="w-5 h-5 text-superteam-purple" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-superteam-slate-900">Ready to Ship</p>
+                          <p className="text-xs text-superteam-slate-500">API-first, fits earn-agent</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="text-center">
+                      <p className="text-sm text-superteam-slate-600 italic">
+                        "This isn't a proposal. It's a working demo. Try it above. See the results."
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </motion.section>
+
+              {/* ═══════════════════════════════════════════════════════════════ */}
               {/* HOW IT WORKS SECTION */}
               {/* ═══════════════════════════════════════════════════════════════ */}
               <motion.section
                 initial={{ opacity: 0, y: 40 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
-                className="pt-20"
+                className="pt-12"
               >
                 <div className="text-center mb-10">
                   <h3 className="text-2xl font-bold text-superteam-slate-900 mb-2">How It Works</h3>
@@ -570,7 +827,7 @@ export default function Home() {
                   {EXAMPLE_REVIEWS.map((ex, i) => (
                     <button
                       key={ex.id}
-                      onClick={() => setSelectedExample(i)}
+                      onClick={() => { setSelectedExample(i); setShowFullReport(false); }}
                       className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                         selectedExample === i
                           ? 'bg-superteam-purple text-white shadow-md'
@@ -670,7 +927,7 @@ export default function Home() {
                       </div>
 
                       {/* Review Notes */}
-                      <div>
+                      <div className="mb-6">
                         <h5 className="text-sm font-semibold text-superteam-slate-700 mb-3">Review Summary</h5>
                         <div className="space-y-2">
                           {currentExample.notes.map((note, i) => (
@@ -683,6 +940,144 @@ export default function Home() {
                           ))}
                         </div>
                       </div>
+
+                      {/* View Full Report Button */}
+                      <div className="pt-4 border-t border-superteam-slate-200">
+                        <button
+                          onClick={() => setShowFullReport(!showFullReport)}
+                          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-superteam-slate-50 hover:bg-superteam-slate-100 text-superteam-slate-700 font-medium transition-colors"
+                        >
+                          {showFullReport ? (
+                            <>
+                              <ChevronUp className="w-4 h-4" />
+                              Hide Full Report
+                            </>
+                          ) : (
+                            <>
+                              <FileCode className="w-4 h-4" />
+                              View Full Report
+                              <Badge className="bg-superteam-purple/10 text-superteam-purple text-xs">Detailed Analysis</Badge>
+                            </>
+                          )}
+                        </button>
+                      </div>
+
+                      {/* Full Report Expanded */}
+                      <AnimatePresence>
+                        {showFullReport && currentExample.fullReport && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="pt-6 space-y-6">
+                              {/* Detailed Analysis */}
+                              <div>
+                                <h5 className="text-sm font-semibold text-superteam-slate-900 mb-4 flex items-center gap-2">
+                                  <Users className="w-4 h-4" /> Detailed Judge Analysis
+                                </h5>
+                                <div className="space-y-4">
+                                  {currentExample.fullReport.detailedAnalysis.map((analysis, i) => (
+                                    <div key={i} className="bg-superteam-slate-50 rounded-xl p-4">
+                                      <div className="flex items-center gap-3 mb-2">
+                                        <span className="text-xl">{analysis.icon}</span>
+                                        <span className="font-semibold text-superteam-slate-900">{analysis.name}</span>
+                                        <span className={`ml-auto text-lg font-bold ${
+                                          analysis.score >= 80 ? 'text-green-600' :
+                                          analysis.score >= 60 ? 'text-yellow-600' : 'text-red-600'
+                                        }`}>{analysis.score}</span>
+                                      </div>
+                                      <p className="text-sm text-superteam-slate-600 leading-relaxed">{analysis.analysis}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* File Breakdown */}
+                              <div>
+                                <h5 className="text-sm font-semibold text-superteam-slate-900 mb-4 flex items-center gap-2">
+                                  <FileCode className="w-4 h-4" /> File-by-File Breakdown
+                                </h5>
+                                <div className="bg-superteam-slate-50 rounded-xl overflow-hidden">
+                                  <table className="w-full text-sm">
+                                    <thead>
+                                      <tr className="border-b border-superteam-slate-200">
+                                        <th className="text-left py-2 px-4 font-medium text-superteam-slate-500">File</th>
+                                        <th className="text-center py-2 px-4 font-medium text-superteam-slate-500">Score</th>
+                                        <th className="text-center py-2 px-4 font-medium text-superteam-slate-500">Status</th>
+                                        <th className="text-right py-2 px-4 font-medium text-superteam-slate-500">Lines</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {currentExample.fullReport.fileBreakdown.map((file, i) => (
+                                        <tr key={i} className="border-b border-superteam-slate-100 last:border-0">
+                                          <td className="py-2 px-4 font-mono text-xs text-superteam-slate-700">{file.file}</td>
+                                          <td className={`py-2 px-4 text-center font-bold ${getFileStatusColor(file.status)}`}>{file.score}</td>
+                                          <td className="py-2 px-4 text-center">
+                                            <span className={`text-xs px-2 py-0.5 rounded-full ${
+                                              file.status === 'excellent' ? 'bg-green-100 text-green-700' :
+                                              file.status === 'good' ? 'bg-blue-100 text-blue-700' :
+                                              file.status === 'needs-work' ? 'bg-yellow-100 text-yellow-700' :
+                                              'bg-red-100 text-red-700'
+                                            }`}>{file.status}</span>
+                                          </td>
+                                          <td className="py-2 px-4 text-right text-superteam-slate-500">{file.lines}</td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </div>
+
+                              {/* Actionable Recommendations */}
+                              <div>
+                                <h5 className="text-sm font-semibold text-superteam-slate-900 mb-4 flex items-center gap-2">
+                                  <AlertOctagon className="w-4 h-4" /> Actionable Recommendations
+                                </h5>
+                                <div className="space-y-2">
+                                  {currentExample.fullReport.recommendations.map((rec, i) => (
+                                    <div key={i} className={`flex items-start gap-3 p-3 rounded-lg border ${getPriorityColor(rec.priority)}`}>
+                                      <span className="text-xs font-bold uppercase px-2 py-0.5 rounded bg-white/50">
+                                        {rec.priority}
+                                      </span>
+                                      <div className="flex-1">
+                                        <p className="text-sm font-medium">{rec.text}</p>
+                                        <span className="text-xs opacity-75">{rec.category}</span>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* Code Snippets */}
+                              <div>
+                                <h5 className="text-sm font-semibold text-superteam-slate-900 mb-4 flex items-center gap-2">
+                                  <Code2 className="w-4 h-4" /> Code Suggestions
+                                </h5>
+                                {currentExample.fullReport.codeSnippets.map((snippet, i) => (
+                                  <div key={i} className="bg-superteam-slate-900 rounded-xl overflow-hidden">
+                                    <div className="flex items-center justify-between px-4 py-2 bg-superteam-slate-800 border-b border-superteam-slate-700">
+                                      <span className="text-sm font-medium text-white">{snippet.title}</span>
+                                      <span className="text-xs text-superteam-slate-400 font-mono">{snippet.file}:{snippet.line}</span>
+                                    </div>
+                                    <div className="p-4 space-y-4">
+                                      <div>
+                                        <span className="text-xs text-red-400 font-medium">// Before</span>
+                                        <pre className="mt-1 text-sm text-red-300 font-mono whitespace-pre-wrap">{snippet.before}</pre>
+                                      </div>
+                                      <div>
+                                        <span className="text-xs text-green-400 font-medium">// After (Recommended)</span>
+                                        <pre className="mt-1 text-sm text-green-300 font-mono whitespace-pre-wrap">{snippet.after}</pre>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
                   </motion.div>
                 </AnimatePresence>

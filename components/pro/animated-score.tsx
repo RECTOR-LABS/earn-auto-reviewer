@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, useSpring, useTransform } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 interface AnimatedScoreProps {
   score: number;
@@ -48,7 +48,7 @@ export function AnimatedScore({
   const radius = (config.width - config.strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
 
-  const [isVisible, setIsVisible] = useState(false);
+  const isVisible = true;
   const springValue = useSpring(0, { stiffness: 50, damping: 20 });
   const displayScore = useTransform(springValue, (v) => Math.round(v));
   const strokeDashoffset = useTransform(
@@ -57,7 +57,6 @@ export function AnimatedScore({
   );
 
   useEffect(() => {
-    setIsVisible(true);
     springValue.set(score);
   }, [score, springValue]);
 

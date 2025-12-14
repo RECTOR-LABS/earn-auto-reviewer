@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
-import { JudgeReview, Finding, Severity, Verdict } from '@/types';
+import { JudgeReview, Finding, Verdict } from '@/types';
 import { ChevronDown } from 'lucide-react';
 import { ProBadge } from './pro-badge';
 

@@ -13,7 +13,6 @@ import {
   ReviewResult,
   JudgeId,
   JudgeReview,
-  Finding,
   OverallScore,
   FullReport,
   JUDGES,
@@ -102,7 +101,7 @@ const multiJudgeReviewSchema = z.object({
 // JSON Extraction
 // ============================================
 
-function extractJSON(text: string): string {
+export function extractJSON(text: string): string {
   const trimmed = text.trim();
 
   // Strategy 1: Already valid JSON
@@ -133,7 +132,7 @@ function extractJSON(text: string): string {
 // Grade Calculation
 // ============================================
 
-function calculateGrade(score: number): string {
+export function calculateGrade(score: number): string {
   if (score >= 95) return 'A+';
   if (score >= 90) return 'A';
   if (score >= 85) return 'B+';
@@ -227,7 +226,7 @@ function parseMultiJudgeResponse(
 export async function generateMultiJudgeReview(params: {
   type: 'pr' | 'repo';
   content: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   url: string;
   judges: JudgeId[];
   model?: ModelId;

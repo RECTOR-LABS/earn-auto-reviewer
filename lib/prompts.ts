@@ -59,7 +59,7 @@ THE 8 JUDGES:
 export function createMultiJudgePrompt(data: {
   type: 'pr' | 'repo';
   content: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   judges: JudgeId[];
 }): string {
   const { type, content, metadata, judges } = data;
@@ -198,7 +198,7 @@ Be fair and constructive. The total score should equal the sum of all breakdown 
 export function createLegacyReviewPrompt(data: {
   type: 'pr' | 'repo';
   content: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
 }): string {
   const { type, content, metadata } = data;
 

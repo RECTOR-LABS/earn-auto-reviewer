@@ -351,7 +351,7 @@ export default function ProposalPage() {
         >
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-superteam-slate-900 mb-2">Tech Stack Alignment</h2>
-            <p className="text-superteam-slate-600">Our stack matches exactly what you're looking for</p>
+            <p className="text-superteam-slate-600">Our stack matches exactly what you&apos;re looking for</p>
           </div>
 
           <div className="bg-white rounded-2xl border border-superteam-slate-200 p-6">

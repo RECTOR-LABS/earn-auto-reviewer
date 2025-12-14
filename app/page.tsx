@@ -407,7 +407,11 @@ export default function Home() {
   const toggleJudge = (id: JudgeId) => {
     setCustomJudges((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
   };
@@ -1131,15 +1135,15 @@ export default function Home() {
                                   <div key={i} className="bg-superteam-slate-900 rounded-xl overflow-hidden">
                                     <div className="flex items-center justify-between px-4 py-2 bg-superteam-slate-800 border-b border-superteam-slate-700">
                                       <span className="text-sm font-medium text-white">{snippet.title}</span>
-                                      <span className="text-xs text-superteam-slate-400 font-mono">{snippet.file}:{snippet.line}</span>
+                                      <span className="text-xs text-superteam-slate-400 font-mono">{`${snippet.file}:${snippet.line}`}</span>
                                     </div>
                                     <div className="p-4 space-y-4">
                                       <div>
-                                        <span className="text-xs text-red-400 font-medium">// Before</span>
+                                        <span className="text-xs text-red-400 font-medium">{'// Before'}</span>
                                         <pre className="mt-1 text-sm text-red-300 font-mono whitespace-pre-wrap">{snippet.before}</pre>
                                       </div>
                                       <div>
-                                        <span className="text-xs text-green-400 font-medium">// After (Recommended)</span>
+                                        <span className="text-xs text-green-400 font-medium">{'// After (Recommended)'}</span>
                                         <pre className="mt-1 text-sm text-green-300 font-mono whitespace-pre-wrap">{snippet.after}</pre>
                                       </div>
                                     </div>
@@ -1485,11 +1489,11 @@ export default function Home() {
                                     </div>
                                     <div className="p-4 space-y-4">
                                       <div>
-                                        <span className="text-xs text-red-400 font-medium">// Before</span>
+                                        <span className="text-xs text-red-400 font-medium">{'// Before'}</span>
                                         <pre className="mt-2 text-sm text-red-300 font-mono whitespace-pre-wrap overflow-x-auto">{snippet.before}</pre>
                                       </div>
                                       <div>
-                                        <span className="text-xs text-green-400 font-medium">// After (Recommended)</span>
+                                        <span className="text-xs text-green-400 font-medium">{'// After (Recommended)'}</span>
                                         <pre className="mt-2 text-sm text-green-300 font-mono whitespace-pre-wrap overflow-x-auto">{snippet.after}</pre>
                                       </div>
                                     </div>

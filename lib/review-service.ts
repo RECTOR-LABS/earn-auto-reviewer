@@ -12,7 +12,7 @@ import {
   fetchBranchCommitHash,
 } from './github';
 import { generateMultiJudgeReview } from './reviewer';
-import { getCachedReview, setCachedReview, CachedReview } from './cache';
+import { getCachedReview, setCachedReview } from './cache';
 import { logger } from './logger';
 
 export interface ReviewServiceResult {
@@ -53,7 +53,7 @@ async function fetchReviewContent(
 ): Promise<{
   type: 'pr' | 'repo';
   content: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
 }> {
   const { owner, repo, type, identifier } = parsed;
 
@@ -123,12 +123,10 @@ ${repoData.readmeContent || 'No README found.'}
   };
 }
 
-/**
- * Generate cache key including judges
- */
-function getJudgesCacheKey(judges: JudgeId[]): string {
-  return judges.sort().join(',');
-}
+// Reserved for future cache differentiation by judge selection
+// function getJudgesCacheKey(judges: JudgeId[]): string {
+//   return judges.sort().join(',');
+// }
 
 /**
  * Main review service function
@@ -140,7 +138,6 @@ export async function getReview(
   model: ModelId = DEFAULT_MODEL
 ): Promise<ReviewServiceResult> {
   const url = parsed.url;
-  const judgeKey = getJudgesCacheKey(judges);
 
   // Step 1: Get current commit hash
   logger.service.info('Fetching commit hash', { url });

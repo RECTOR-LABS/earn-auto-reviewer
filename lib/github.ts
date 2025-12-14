@@ -94,7 +94,7 @@ export function parseGitHubUrl(url: string): ParsedGitHubUrl {
       repo: repo.replace(/\.git$/, ''),
       url: normalizedUrl,
     };
-  } catch (error) {
+  } catch {
     // Invalid URL format
     return {
       type: 'invalid',

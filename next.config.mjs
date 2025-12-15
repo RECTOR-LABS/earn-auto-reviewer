@@ -1,9 +1,4 @@
 // @ts-check
-import bundleAnalyzer from "@next/bundle-analyzer";
-
-const withBundleAnalyzer = bundleAnalyzer({
-  enabled: process.env.ANALYZE === "true",
-});
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -43,4 +38,19 @@ const nextConfig = {
   },
 };
 
-export default withBundleAnalyzer(nextConfig);
+// Bundle analyzer is optional (devDependency, not available in production build)
+let config = nextConfig;
+
+if (process.env.ANALYZE === 'true') {
+  try {
+    const bundleAnalyzer = await import('@next/bundle-analyzer');
+    const withBundleAnalyzer = bundleAnalyzer.default({
+      enabled: true,
+    });
+    config = withBundleAnalyzer(nextConfig);
+  } catch {
+    console.warn('Bundle analyzer not available, skipping...');
+  }
+}
+
+export default config;

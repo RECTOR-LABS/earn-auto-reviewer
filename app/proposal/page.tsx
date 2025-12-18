@@ -32,15 +32,15 @@ const DEMO_VIDEOS = [
     id: 'video1',
     title: 'Tesior Web Review',
     description: 'Full repository analysis with detailed breakdown and code suggestions',
-    youtubeId: 'h417a4o90Ps',
-    url: 'https://www.youtube.com/watch?v=h417a4o90Ps',
+    youtubeId: 'MDF9AIaDhl8',
+    url: 'https://www.youtube.com/watch?v=MDF9AIaDhl8',
   },
   {
     id: 'video2',
     title: 'SuperteamDAO PR Review #1288',
     description: 'Watch our AI analyze a real SuperteamDAO pull request - TLDR scores + Full Report',
-    youtubeId: 'lFqoYyjXIks',
-    url: 'https://www.youtube.com/watch?v=lFqoYyjXIks',
+    youtubeId: 'DEjf_az7EKU',
+    url: 'https://www.youtube.com/watch?v=DEjf_az7EKU',
   },
 ];
 

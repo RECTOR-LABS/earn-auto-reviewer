@@ -298,8 +298,8 @@ npm run lint
 - [x] Add OpenRouter credits ✅
 - [x] Test with real examples - Issue #4 ✅
 - [x] Record demo videos - Issue #8 ✅
-  - Video 1: Tesior Web Review (YouTube: h417a4o90Ps)
-  - Video 2: SuperteamDAO PR Review #1288 (YouTube: lFqoYyjXIks)
+  - Video 1: Tesior Web Review (YouTube: MDF9AIaDhl8)
+  - Video 2: SuperteamDAO PR Review #1288 (YouTube: DEjf_az7EKU)
 - [x] Upload videos to YouTube ✅
 - [x] Embed videos in /proposal page ✅
 - [x] Submit to Superteam Earn ✅ (Dec 15, 2025 - Quote: $2,500 USDC)
@@ -458,7 +458,7 @@ Pre-loaded examples from Superteam Earn:
 - 📅 Submitted: December 15, 2025
 - 💰 Quote: $2,500 USDC
 - 🔗 Demo: https://earn-auto-review.rectorspace.com
-- 📺 Videos: YouTube (h417a4o90Ps, lFqoYyjXIks)
+- 📺 Videos: YouTube (MDF9AIaDhl8, DEjf_az7EKU)
 - 📋 Proposal: /proposal page
 
 **All Phases Complete**:
